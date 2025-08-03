@@ -10,26 +10,18 @@ export const AuthProvider = ({ children }) => {
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // โหลดข้อมูลจาก localStorage ตอน mount (หน้า reload/เปิด tab ใหม่)
+
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('user');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (parsed && parsed.user && parsed.token) {
-          setUser(parsed.user);
-          setToken(parsed.token);
-        } else {
-          localStorage.removeItem('user'); // ล้างข้อมูลถ้าไม่ถูกต้อง
-        }
-      }
-    } catch (error) {
-      console.error('Failed to parse user from storage', error);
-      localStorage.removeItem('user');
-    } finally {
-      setLoading(false);
+  const stored = localStorage.getItem('user');
+  if (stored) {
+    const parsed = JSON.parse(stored);
+    if (parsed.user && parsed.token) {
+      setUser(parsed.user);
+      setToken(parsed.token);
     }
-  }, []);
+  }
+  setLoading(false);
+}, []);
 
   // ฟังก์ชัน Login (รับ email, password)
   const login = useCallback(async (email, password) => {

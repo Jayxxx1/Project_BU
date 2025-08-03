@@ -19,7 +19,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login({ email, password });
+      await login(email.trim(), password.trim());
       alert('เข้าสู่ระบบสำเร็จ!');
       navigate('/');
     } catch (errMessage) {
@@ -32,7 +32,6 @@ export default function LoginPage() {
 
   const handleGoogleLogin = () => {
     console.log('Google login clicked');
-    // TODO: ใส่ Google OAuth redirect ตรงนี้
   };
 
   return (

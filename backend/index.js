@@ -8,7 +8,7 @@ import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 // import appointmentsRoutes from './routes/appointmentsRoutes.js';
 
 
-dotenv.config({ path: path.resolve('./backend/.env') });
+dotenv.config({ path: path.resolve('./.env') });
 
 // เชื่อม MongoDB
 const connectDB = async () => {
@@ -29,18 +29,15 @@ const PORT = process.env.PORT || 5000;
 app.use(express.json());
 // app.use('/api/appointments', appointmentsRoutes);
 
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN,     
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
-    credentials: true,
-  })
-);
+app.use(cors({ origin: process.env.CORS_ORIGIN }));
+
 
 // Routes
 app.use('/api/auth', authRoutes);
 app.use(notFound);
 app.use(errorHandler);
+app.use(express.json());
+
 // Health check
 app.get('/', (req, res) => res.send('API is running...'));
 

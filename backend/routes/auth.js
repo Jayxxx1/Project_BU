@@ -10,6 +10,7 @@ const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
+    console.log(' Register body:', JSON.stringify(req.body));
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     return res
@@ -62,10 +63,15 @@ router.post('/login', async (req, res) => {
 
   try {
     const user = await User.findOne({ email });
-    if (!user || !(await bcrypt.compare(password, user.password))) {
+    // console.log('Raw login body:', JSON.stringify(req.body));
+    // console.log('Password from client:', JSON.stringify(password));
+if (!user || !(await bcrypt.compare(password, user.password))) {
+        // console.log('User found:', user);
+      // console.log('Comparing password:', password, '=>', user.password);
+      // console.log('Compare result:', await bcrypt.compare(password, user.password));
       return res
-        .status(400)
-        .json({ message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' });
+        .status(401)
+.json({ message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: '99d',

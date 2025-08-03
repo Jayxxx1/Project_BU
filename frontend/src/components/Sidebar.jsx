@@ -85,7 +85,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
 
       {/* Desktop Sidebar - แสดงเฉพาะบน Desktop (hidden md:flex) */}
       <aside
-        className={`hidden md:flex flex-col flex-shrink-0 h-screen bg-white border-r border-gray-200 shadow-lg z-30 
+        className={`hidden md:flex   flex-col flex-shrink-0 h-screen bg-white border-r border-gray-200 shadow-lg z-30 
           transition-all duration-300
           ${isSidebarOpen ? 'w-72' : 'w-20'} // Desktop width based on state
         `}

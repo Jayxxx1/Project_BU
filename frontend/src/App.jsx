@@ -5,10 +5,10 @@ import MainContent from "./components/MainContent";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AppointmentsPages from './pages/AppointmentsPages';
-import CreateAppointmentsPages from "./pages/CreateappointmentPages";
+import CreateAppointmentPages from "./pages/CreateAppointmentPages.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
-import meetsummaryPages from "./pages/meetsumPage";
-import AboutPages from "./pages/aboutPages";
+import MeetSummaryPages from "./pages/MeetSumPages.jsx";
+import AboutPages from "./pages/AboutPage.jsx";
 
 
 export default function App() {
@@ -29,19 +29,19 @@ export default function App() {
         <Route
           path="appointments"
           element={
-            <ProtectedRoute>
+            
               <AppointmentsPages />
-            </ProtectedRoute>
+            
           }
         />
-        <Route
+        {/* <Route
           path="appointments/create"
           element={
             <ProtectedRoute>
               <CreateAppointmentsPages />
             </ProtectedRoute>
           }
-        />
+        /> */}
       {/* <Route
         path="meetsummary"
         element={<ProtectedRoute>
