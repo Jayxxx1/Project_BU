@@ -1,15 +1,15 @@
 import React from "react";
-import { Routes, Route } from 'react-router-dom';
+import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
 import MainContent from "./components/MainContent";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
-import AppointmentsPages from './pages/AppointmentsPages';
-import CreateAppointmentPages from "./pages/CreateAppointmentPages.jsx";
+import AppointmentsPages from "./pages/AppointmentsPages.jsx";
+import CreateAppointment from "./pages/CreateAppointments.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
-import MeetSummaryPages from "./pages/MeetSumPages.jsx";
+import MeetSumPage from "./pages/MeetSumPage.jsx";
+import GroupPage from "./pages/GroupPage.jsx";
 import AboutPages from "./pages/AboutPage.jsx";
-
 
 export default function App() {
   return (
@@ -29,42 +29,38 @@ export default function App() {
         <Route
           path="appointments"
           element={
-            
+            <ProtectedRoute>
               <AppointmentsPages />
-            
+            </ProtectedRoute>
           }
         />
-        {/* <Route
+        <Route
           path="appointments/create"
           element={
             <ProtectedRoute>
-              <CreateAppointmentsPages />
+              <CreateAppointment />
             </ProtectedRoute>
           }
-        /> */}
-      {/* <Route
-        path="meetsummary"
-        element={<ProtectedRoute>
-          <MeetSummaryPage />
-        </ProtectedRoute>
-        }
-      /> */}
-      <Route path="/" element={<Layout />}></Route>
-      <Route
-        path="groups"
-        element={<ProtectedRoute>
-          <meetsummaryPages />
-        </ProtectedRoute>
-        }
-      />
+        />
+        <Route
+          path="meetsummary"
+          element={
+            <ProtectedRoute>
+              <MeetSumPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="groups"
+          element={
+            <ProtectedRoute>
+              <GroupPage />
+            </ProtectedRoute>
+          }
+        />
+      </Route>
 
-      {/* เพิ่ม Protected Routes อื่นๆ ที่นี่ ที่คุณต้องการให้ Login เท่านั้นที่เข้าได้ */}
-      {/* <Route path="meetsummary" element={<ProtectedRoute><MeetSummaryPage /></ProtectedRoute>} /> */}
-      {/* <Route path="groups" element={<ProtectedRoute><GroupsPage /></ProtectedRoute>} /> */}
-    </Route>
-
-      {/* (Optional) Route สำหรับจัดการ Path ที่ไม่ตรงกับ Route ใดๆ (เช่น 404 Not Found) */ }
-  {/* <Route path="*" element={<NotFoundPage />} /> */ }
-    </Routes >
+      {/* <Route path="*" component={NotFound} /> */}
+    </Routes>
   );
 }

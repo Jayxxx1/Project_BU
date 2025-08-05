@@ -1,57 +1,52 @@
-import React, { useState } from 'react';
-import authService from '../services/authService';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext";
 
 export default function RegisterPage() {
-  const [username, setUsername] = useState('');
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [error, setError] = useState('');
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [success, setSuccess] = useState('');
+  const [success, setSuccess] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const navigate = useNavigate();
-  const { register } = useAuth(); // This 'register' from useAuth is not used in the current handleSubmit. The local authService.register is used.
+  const { register } = useAuth();
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
-    setLoading(true);
+  e.preventDefault();
+  setError("");
+  setSuccess("");
+  setLoading(true);
 
-    if (password !== confirmPassword) {
-      setError('รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน');
-      setLoading(false);
-      return;
-    }
-
-    try {
-      const userData = { username, email, password };
-      await authService.register(userData);
-      setSuccess('ลงทะเบียนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว');
-      setUsername('');
-      setEmail('');
-      setPassword('');
-      setConfirmPassword('');
-      setTimeout(() => {
-        navigate('/login');
-      }, 2000);
-    } catch (err) {
-      console.error("Registration error:", err);
-      setError(err)
-    } finally {
-      setLoading(false);
-    }
-  };
-
+  if (password !== confirmPassword) {
+    setError("รหัสผ่านและการยืนยันรหัสผ่านไม่ตรงกัน");
+    setLoading(false);
+    return;
+  }
+  try {
+    await register(username, email, password);
+    setSuccess("ลงทะเบียนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว");
+    setUsername("");
+    setEmail("");
+    setPassword("");
+    setConfirmPassword("");
+    setTimeout(() => navigate("/login"), 2000);
+  } catch (err) {
+    if (typeof err === "string") setError(err);
+    else if (err?.response?.data?.message) setError(err.response.data.message);
+    else if (err?.message) setError(err.message);
+    else setError("เกิดข้อผิดพลาดขณะสมัครสมาชิก");
+  } finally {
+    setLoading(false);
+  }
+};
   const handleGoogleSignup = () => {
     console.log('Google signup clicked');
-    // You'd typically redirect to a Google OAuth URL here
-  };
 
+}
   return (
     <div className="flex min-h-screen bg-gray-50 items-center justify-center p-4">
       <div className="flex flex-col lg:flex-row w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">

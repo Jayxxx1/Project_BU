@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from "react";
+import { Outlet } from "react-router-dom";
 
-import Sidebar from './Sidebar';
-import Header from './Header';
+import Sidebar from "./Sidebar";
+import Header from "./Header";
 
 export default function Layout() {
   // กำหนดสถานะเริ่มต้นของ Sidebar:
@@ -19,23 +19,22 @@ export default function Layout() {
       setIsSidebarOpen(window.innerWidth >= 768);
     };
 
-    window.addEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
 
-    const initialCheckTimeout = setTimeout(handleResize, 0); 
+    const initialCheckTimeout = setTimeout(handleResize, 0);
 
     // Cleanup function: ลบ Event Listener เมื่อ Component ถูก unmount
     return () => {
-      window.removeEventListener('resize', handleResize);
+      window.removeEventListener("resize", handleResize);
       clearTimeout(initialCheckTimeout); // Clear timeout on unmount
     };
-  }, []); 
+  }, []);
 
   return (
-
     <div className="flex min-h-screen bg-gray-50">
       {/* Sidebar component: จะอยู่ fixed ที่ด้านซ้ายมือ */}
       <Sidebar isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-      
+
       {/*
         Overlay สำหรับ Mobile:
         จะปรากฏขึ้นเมื่อ Sidebar เปิดอยู่ (isSidebarOpen) และหน้าจอเป็น Mobile (md:hidden)
@@ -43,7 +42,7 @@ export default function Layout() {
         เราเปลี่ยน bg-black bg-opacity-50 เป็น bg-transparent เพื่อไม่ให้เนื้อหาดำ
       */}
       {isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-transparent z-20 md:hidden" // เปลี่ยนเป็น bg-transparent
           onClick={toggleSidebar}
         ></div>
@@ -61,16 +60,14 @@ export default function Layout() {
           (ml-72 เมื่อเปิด, ml-20 เมื่อปิด)
         - 'transition-all duration-300' เพื่อให้การเปลี่ยน margin ดูราบรื่น
       */}
-      <div className={`flex flex-col flex-grow transition-all duration-300
-        // บน Mobile (จอเล็กกว่า md): เนื้อหาหลักจะไม่มี margin-left
-        ml-0
-        // บน Desktop (จอ md ขึ้นไป): เนื้อหาหลักจะมี margin-left ตามความกว้าง Sidebar
-        md:${isSidebarOpen ? 'ml-72' : 'ml-20'}
-      `}>
+      <div
+        className={`flex flex-col flex-grow transition-all duration-300
+        md:${isSidebarOpen ? "ml-72" : "ml-20"}`}
+      >
         {/* Header component: จะอยู่ด้านบนของ Main content area */}
         {/* ส่ง toggleSidebar ไปให้ Header ด้วย เพื่อให้ Header มีปุ่ม Hamburger สำหรับ Mobile */}
-        <Header isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} /> 
-        
+        <Header isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
+
         {/* Outlet: จุดที่ Component ลูกของ Nested Route จะถูก Render */}
         <Outlet />
       </div>

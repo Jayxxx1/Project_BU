@@ -1,6 +1,7 @@
 import { RiCalendarScheduleLine } from "react-icons/ri";
 export default function MainContent() {
   return (
+    
     <div className="flex-grow p-6 bg-gray-50">
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 text-white mb-8 relative overflow-hidden">

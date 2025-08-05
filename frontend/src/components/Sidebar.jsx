@@ -85,14 +85,14 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
 
       {/* Desktop Sidebar - แสดงเฉพาะบน Desktop (hidden md:flex) */}
       <aside
-        className={`hidden md:flex   flex-col flex-shrink-0 h-screen bg-white border-r border-gray-200 shadow-lg z-30 
-          transition-all duration-300
-          ${isSidebarOpen ? 'w-72' : 'w-20'} // Desktop width based on state
+        className={`hidden md:flex   flex-col flex-shrink-0 h-screen bg-white border-r border-gray-200 shadow-lg z-30
+          transition-all duration-700
+          ${isSidebarOpen ? 'w-70' : 'w-25'} // Desktop width based on state
         `}
       >
         {/* Desktop Sidebar Header (Logo + System Name + Toggle Button) */}
         <div className={`flex items-center border-b border-gray-200
-          ${isSidebarOpen ? 'p-6' : 'p-3'} // Adjust padding based on sidebar state
+          ${isSidebarOpen ? 'p-6' : 'p-6'} // Adjust padding based on sidebar state
         `}>
 
           <>
