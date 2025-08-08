@@ -31,7 +31,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
     <>
       {/* Mobile Sidebar (Overlay) - แสดงเฉพาะบน Mobile (md:hidden) */}
       <aside
-        className={`fixed top-0 left-0 h-screen bg-white border-r border-gray-200 shadow-lg z-30 // เปลี่ยน h-full เป็น h-screen
+        className={`fixed top-0 left-0 min-h-screen bg-white border-r border-gray-200 shadow-lg z-30 // เปลี่ยน h-full เป็น min-h-screen
           flex flex-col transition-transform duration-300
           w-64 // Fixed width for mobile overlay
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
@@ -85,7 +85,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
 
       {/* Desktop Sidebar - แสดงเฉพาะบน Desktop (hidden md:flex) */}
       <aside
-        className={`hidden md:flex   flex-col flex-shrink-0 h-screen bg-white border-r border-gray-200 shadow-lg z-30
+        className={`hidden md:flex   flex-col flex-shrink-0 min-h-screen bg-white border-r border-gray-200 shadow-lg z-30
           transition-all duration-700
           ${isSidebarOpen ? 'w-70' : 'w-25'} // Desktop width based on state
         `}
@@ -97,7 +97,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
 
           <>
             <div className="flex-shrink-0">
-              <img src="./logo/logo1.png" alt="Logo" className="w-16 h-16" /> {/* Desktop logo size */}
+              <img src="/logo/logo1.png" alt="Logo" className="w-16 h-16" /> {/* Desktop logo size */}
             </div>
 
           </>
@@ -133,8 +133,8 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
           </ul>
         </nav>
 
-        {/* Desktop Logout button */}
-        {isAuthenticated ? (
+       
+        {/* {isAuthenticated ? (
         <div className={`p-6 border-t border-gray-200 ${isSidebarOpen ? 'justify-start' : 'justify-center'} flex`}>
           <button
           onClick={handleLogout} 
@@ -145,7 +145,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
             {isSidebarOpen && <span>ออกจากระบบ</span>}
           </button>
         </div> 
-        ) : null}
+        ) : null} */}
       </aside>
     </>
   );

@@ -1,7 +1,5 @@
 import Appointment from '../models/Appointment.js';
 import asyncHandler from 'express-async-handler';
-
-// สร้างนัดหมายใหม่
 export const createAppointment = asyncHandler(async (req, res) => {
   const { title, description, reason, date, startTime, endTime, participants, meetingType, location, relatedGroup } = req.body;
   if (!title || !date || !startTime || !endTime) {

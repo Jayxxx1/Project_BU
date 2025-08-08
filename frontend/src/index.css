@@ -1,1 +1,4 @@
 @import "tailwindcss";
+body {
+  font-family: 'Mitr', ui-sans-serif, system-ui, sans-serif;
+}
