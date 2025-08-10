@@ -7,7 +7,8 @@ import React from "react";
 export default function MainContent() {
   const navigate = useNavigate();
   return (
-    <div className="flex-grow p-6 bg-gray-50">
+        // <div className="bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat min-h-screen lg:p-8 ">
+    <div className="flex-grow p-6 bg-gray-50"> 
       {/* Welcome Section */}
       <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 text-white mb-8 relative overflow-hidden">
         {/* Background decorations */}
@@ -74,7 +75,7 @@ export default function MainContent() {
               </svg>
             </div>
             <div className="ml-4">
-              <p className="text-sm text-gray-500">ผู้ป่วยทั้งหมด</p>
+              <p className="text-sm text-gray-500">ผู้ใช้งานทั้งหมด</p>
               <p className="text-2xl font-semibold text-gray-900">48</p>
             </div>
           </div>
@@ -141,5 +142,6 @@ export default function MainContent() {
         </div>
       </div>
     </div>
+    // </div>
   );
 }

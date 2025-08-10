@@ -185,7 +185,7 @@ export default function CreateAppointment() {
 }
   return (
 
-    <div className="min-h-screen flex items-center justify-center bg-[url('/bg/bg.webp')] bg-cover bg-center bg-no-repeat relative">
+    <div className="min-h-screen flex items-center justify-center bg-[url('/bg/bg.webp')] bg-cover bg-center bg-no-repeat relative overflow-hidden">
       {/* Background blur overlay */}
       <div className="absolute inset-0 bg-white/70 backdrop-blur-xs"></div>
       <div className="relative z-10 max-w-5xl w-full mx-auto px-2 sm:px-8 py-8">
@@ -193,10 +193,7 @@ export default function CreateAppointment() {
         <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-t-2xl px-8 py-6 mb-0 shadow-xl">
           <h2 className="text-2xl font-medium">สร้างนัดหมายใหม่</h2>
         </div>
-        <form
-          onSubmit={handlePreview}
-          className="bg-white rounded-b-2xl shadow-xl px-8 py-7 space-y-6"
-        >
+        <form onSubmit={handlePreview} className="bg-white rounded-b-2xl shadow-xl px-8 py-7 space-y-6" >
           {/* Error message */}
           {error && (
             <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
@@ -208,13 +205,7 @@ export default function CreateAppointment() {
             <label className="block font-semibold mb-3 text-gray-700 text-base md:text-lg">
               กลุ่มของคุณ
             </label>
-            <select
-              name="group"
-              value={formData.group}
-              onChange={handleChange}
-              required
-              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-            >
+            <select name="group" value={formData.group} onChange={handleChange} required className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" >
               <option value="">เลือกกลุ่ม</option>
               {groups.map((group) => (
                 <option key={group.id} value={group.id}>
@@ -223,7 +214,6 @@ export default function CreateAppointment() {
               ))}
             </select>
           </div>
-
           {/* Advisor Info */}
           {selectedAdvisor && (
             <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-1">
@@ -243,173 +233,139 @@ export default function CreateAppointment() {
           {/* Title */}
           <div>
             <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-gray-500" /> หัวข้อ
+              <FileText className="w-4 h-4 mr-2 text-gray-500" />
+              หัวข้อ
             </label>
-            <input
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="หัวข้อการนัดหมาย"
-              className="w-full border p-3 rounded-xl"
-            />
+            <input name="title" value={formData.title} onChange={handleChange} placeholder="หัวข้อการนัดหมาย เช่น การประชุมเพื่อนำเสนอความคืบหน้าโครงงาน" required className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
           </div>
           {/* Description */}
           <div>
-            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-gray-500" /> รายละเอียด
+            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2">
+              รายละเอียด
             </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="รายละเอียด (ถ้ามี)"
-              className="w-full border p-4 rounded-xl"
-            />
+            <textarea name="description" value={formData.description} onChange={handleChange} placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับการนัดหมาย" rows="3" className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
           </div>
-          {/* Date & Time */}
-          <label className="block font-semibold text-gray-700 mb-1 text-base md:text-lg">วันที่ / เวลา</label>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-10 items-end">
-            <input
-              type="date"
-              name="date"
-              value={formData.date}
-              onChange={handleChange}
-              className="border p-3 rounded-xl"
-            />
-            <div className="flex flex-col md:flex-row md:items-center md:space-x-2 space-y-2 md:space-y-0">
-              <div>
-            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-1">
-                  เริ่มต้น
-                </label>
-                <input
-                  type="time"
-                  name="startTime"
-                  value={formData.startTime}
-                  onChange={handleChange}
-                  className="border p-3 rounded-xl"
-                />
-              </div>
-              <div>
-            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-1">
-                  สิ้นสุด
-                </label>
-                <input
-                  type="time"
-                  name="endTime"
-                  value={formData.endTime}
-                  onChange={handleChange}
-                  className="border p-3 rounded-xl"
-                />
-              </div>
+          {/* Date and Time */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
+                <Calendar className="w-4 h-4 mr-2 text-gray-500" />
+                วันที่
+              </label>
+              <input type="date" name="date" value={formData.date} onChange={handleChange} required className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+            </div>
+            <div>
+              <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-gray-500" />
+                เวลาเริ่มต้น
+              </label>
+              <input type="time" name="startTime" value={formData.startTime} onChange={handleChange} required className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+            </div>
+            <div>
+              <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
+                <Clock className="w-4 h-4 mr-2 text-gray-500" />
+                เวลาสิ้นสุด
+              </label>
+              <input type="time" name="endTime" value={formData.endTime} onChange={handleChange} required className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
             </div>
           </div>
-
-          {/* Meeting Type */}
+          {/* Meeting Type and Location */}
           <div>
-            <label className="block font-semibold text-gray-700 mb-2 text-base md:text-lg">
-              ประเภทการประชุม
+            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2">
+              ช่องทางการประชุม
             </label>
-            <select
-              name="meetingType"
-              value={formData.meetingType}
-              onChange={handleChange}
-              className="w-full border p-3 rounded-xl"
-            >
-              <option value="offline">ประชุมที่ห้อง/สถานที่</option>
-              <option value="online">ประชุมออนไลน์</option>
-            </select>
-          </div>
-          {/* Location */}
-          <div>
-            <label className="block font-semibold text-gray-700 mb-2 text-base md:text-lg">
-              สถานที่ / ลิงก์
-            </label>
-            <input
-              name="location"
-              value={formData.location}
-              onChange={handleChange}
-              placeholder="สถานที่ / ลิงก์"
-              className="w-full border p-3 rounded-xl"
-            />
-          </div>
-          {/* Note */}
-          <div>
-            <label className="block font-semibold text-gray-700 mb-2 text-base md:text-lg">หมายเหตุ (ถ้ามี)</label>
-            <textarea
-              name="note"
-              value={formData.note}
-              onChange={handleChange}
-              placeholder="หมายเหตุเพิ่มเติมเกี่ยวกับนัดหมาย"
-              className="w-full border p-3 rounded-xl"
-            />
-          </div>
-          {/* Attachment toggle */}
-          <div className="flex items-center mb-2">
-            <input
-              id="attachToggle"
-              type="checkbox"
-              checked={attachEnabled}
-              onChange={(e) => setAttachEnabled(e.target.checked)}
-              className="mr-2 accent-blue-500"
-            />
-            <label htmlFor="attachToggle" className="text-sm text-gray-700">
-              มีไฟล์แนบหรือไม่
-            </label>
-          </div>
-          {/* File inputs */}
-          <div>
-            <label className="block font-semibold mb-2 text-gray-700 text-base md:text-lg">
-              แนบไฟล์ (ได้มากกว่า 1 ไฟล์)
-            </label>
-            <input
-              type="file"
-              multiple
-              disabled={!attachEnabled}
-              onChange={handleFileChange}
-              className={`block w-full text-sm text-gray-500
-                file:mr-4 file:py-2 file:px-4
-                file:rounded-lg file:border-0
-                file:text-sm file:font-semibold
-                file:bg-blue-600 file:text-white
-                hover:file:bg-blue-700
-                ${!attachEnabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-            />
-            {files.length > 0 && (
-              <div className="mt-2 text-sm text-gray-600">
-                ไฟล์ที่เลือก: {files.map((f) => f.name).join(', ')}
+            <div className="flex items-center space-x-6">
+              <label className="inline-flex items-center">
+                <input type="radio" name="meetingType" value="offline" checked={formData.meetingType === 'offline'} onChange={handleChange} className="form-radio text-blue-600 focus:ring-blue-500" />
+                <span className="ml-2 text-gray-700">ออฟไลน์ (ในห้อง)</span>
+              </label>
+              <label className="inline-flex items-center">
+                <input type="radio" name="meetingType" value="online" checked={formData.meetingType === 'online'} onChange={handleChange} className="form-radio text-blue-600 focus:ring-blue-500" />
+                <span className="ml-2 text-gray-700">ออนไลน์ (Microsoft Teams, Google Meet)</span>
+              </label>
+            </div>
+            {formData.meetingType === 'offline' && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                  สถานที่
+                </label>
+                <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="เช่น อาคารเรียนรวม 1 ห้อง 201" className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+              </div>
+            )}
+            {formData.meetingType === 'online' && (
+              <div className="mt-4">
+                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
+                  <MapPin className="w-4 h-4 mr-2 text-gray-500" />
+                  ลิงก์การประชุม
+                </label>
+                <input type="text" name="location" value={formData.location} onChange={handleChange} placeholder="เช่น https://teams.microsoft.com/meeting/..." className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
               </div>
             )}
           </div>
-          {/* Action Button */}
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 font-semibold bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl shadow hover:from-blue-600 hover:to-blue-700 transition duration-200"
-          >
-            {loading ? 'กำลังตรวจสอบ...' : 'ตรวจสอบข้อมูล'}
-          </button>
+          {/* Note */}
+          <div>
+            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2">
+              บันทึกเพิ่มเติม
+            </label>
+            <textarea name="note" value={formData.note} onChange={handleChange} placeholder="ข้อความถึงอาจารย์ที่ปรึกษา" rows="3" className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" />
+          </div>
+          {/* File Attachment */}
+          <div className="mt-6">
+            <div className="flex items-center mb-2">
+              <input
+                type="checkbox"
+                id="attachFiles"
+                checked={attachEnabled}
+                onChange={() => setAttachEnabled(!attachEnabled)}
+                className="form-checkbox text-blue-600 h-5 w-5 rounded focus:ring-blue-500"
+              />
+              <label htmlFor="attachFiles" className="ml-2 text-base md:text-lg font-semibold text-gray-700">
+                แนบไฟล์ (เอกสาร, รูปภาพ, ฯลฯ)
+              </label>
+            </div>
+            {attachEnabled && (
+              <div className="mt-2">
+                <input
+                  type="file"
+                  multiple
+                  onChange={handleFileChange}
+                  className="w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                />
+                <p className="mt-2 text-xs text-gray-500">
+                  ไฟล์ที่เลือก: {files.length} ไฟล์
+                </p>
+              </div>
+            )}
+          </div>
+          {/* Submit Button */}
+          <div className="mt-6">
+            <button type="submit" className="w-full py-4 px-6 rounded-xl text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/50">
+              สร้างนัดหมาย
+            </button>
+          </div>
         </form>
+            
+        <ConfirmAppointmentModal
+          open={showPreview}
+          onClose={() => setShowPreview(false)}
+          onConfirm={handleConfirmSubmit}
+          formData={formData}
+          files={files}
+          groupInfo={selectedGroup}
+          members={members}
+          advisor={selectedAdvisor}
+          loading={loading}
+          projectTitle={selectedProjectTitle}
+        />
+        {/* Feedback Modal */}
+        <FeedbackModal
+          open={showFeedback}
+          message={feedbackMsg}
+          onClose={() => setShowFeedback(false)}
+          autoClose={0}
+        />
       </div>
-      {/* Preview Modal */}
-      <ConfirmAppointmentModal
-        open={showPreview}
-        onClose={() => setShowPreview(false)}
-        onConfirm={handleConfirmSubmit}
-        formData={formData}
-        files={files}
-        groupInfo={selectedGroup}
-        members={members}
-        advisor={selectedAdvisor}
-        loading={loading}
-        projectTitle={selectedProjectTitle}
-      />
-      {/* Feedback Modal */}
-      <FeedbackModal
-        open={showFeedback}
-        message={feedbackMsg}
-        onClose={() => setShowFeedback(false)}
-        autoClose={0}
-      />
     </div>
   );
 }

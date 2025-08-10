@@ -35,7 +35,7 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50 items-center justify-center p-4">
+    <div className="bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat min-h-screen items-center justify-center p-4">
       <div className="flex flex-col lg:flex-row w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
         {/* Left side - optional booking preview */}
         <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-8 bg-gradient-to-br from-blue-100 to-indigo-200">

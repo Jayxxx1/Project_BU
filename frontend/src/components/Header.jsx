@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link , useNavigate} from 'react-router-dom';
-import {useAuth} from '../contexts/AuthContext';
+import { useAuth } from '../contexts/AuthContext';
+import { FiLogOut, FiUserPlus, FiLogIn, FiBell, FiSearch, FiChevronDown } from "react-icons/fi";
 
 export default function Header({ isSidebarOpen, toggleSidebar }) { 
   const [searchValue, setSearchValue] = useState('');
   const {isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
+
+  // A useEffect to log the authentication state for debugging purposes
+  useEffect(() => {
+    console.log('Authentication state changed. isAuthenticated:', isAuthenticated);
+    if (user) {
+      console.log('User:', user.username);
+    }
+  }, [isAuthenticated, user]);
 
   const handleLogout =()=>{
     logout();
@@ -13,99 +22,173 @@ export default function Header({ isSidebarOpen, toggleSidebar }) {
   };
 
   return (
-    <header className="bg-white shadow-sm border-b border-gray-200 px-4 py-3 md:px-6 md:py-4">
-      <div className="flex items-center w-full">
+    <header className="sticky top-0 z-40 bg-white/95 backdrop-blur-xl shadow-lg border-b border-gray-200/50 px-4 py-3 md:px-6 md:py-4 transition-all duration-300">
+      {/* Glass morphism background effect */}
+      <div className="absolute inset-0 bg-gradient-to-r from-blue-50/50 via-white/50 to-purple-50/50"></div>
+      
+      <div className="relative z-10 flex items-center w-full">
         
-        {/* Hamburger Menu Button - แสดงเฉพาะบน Mobile (md:hidden) */}
+        {/* Hamburger Menu Button */}
         <button
           onClick={toggleSidebar}
-          className="p-2 hover:bg-gray-200 rounded-md transition-colors duration-200 flex-shrink-0 " // เพิ่ม md:hidden
+          className="group p-3 hover:bg-gradient-to-r hover:from-blue-100 hover:to-purple-100 rounded-xl transition-all duration-300 flex-shrink-0 hover:scale-110 hover:shadow-md"
           title={isSidebarOpen ? "ยุบ Sidebar" : "ขยาย Sidebar"}
         >
           <svg 
             xmlns="http://www.w3.org/2000/svg" 
             fill="none" 
             viewBox="0 0 24 24" 
-            strokeWidth={1.7} 
+            strokeWidth={2} 
             stroke="currentColor" 
-            className="size-6 text-gray-600" 
+            className="w-6 h-6 text-gray-700 transition-all duration-300 group-hover:text-blue-600 group-hover:rotate-180" 
           >
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
           </svg>
         </button>
 
-        {/* Search Bar - ปรับปรุงโครงสร้างและ Responsive */}
-        {/* ใช้ ml-auto เพื่อดัน Right Side ไปขวาสุด */}
-        <div className="relative   flex-grow  mx-2 sm:mx-4 hidden md:block max-w-sm lg:max-w-md ml-auto"> {/* เพิ่ม ml-auto */}
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <svg className="h-5 w-5 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z"/>
-            </svg>
+        {/* Enhanced Search Bar */}
+        <div className="relative flex-grow mx-190 hidden md:block max-w-sm lg:max-w-md ml-auto">
+          <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+            <FiSearch className="h-5 w-5 text-gray-400 transition-colors duration-200" />
           </div>
           <input
             type="text"
             value={searchValue}
             onChange={(e) => setSearchValue(e.target.value)}
-            className="block w-full pl-10 pr-6 py-2 border border-gray-300 rounded-full leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-            placeholder="ค้นหาอาจารย์ กลุ่ม นัดหมาย..."
+            className="block w-full pl-12 pr-6 py-3 border-2 border-gray-200/50 rounded-2xl leading-5 bg-white/80 backdrop-blur-sm placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all duration-300 shadow-sm hover:shadow-md focus:shadow-lg"
+            placeholder="🔍 ค้นหาอาจารย์ กลุ่ม นัดหมาย..."
           />
+          <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-400/10 opacity-0 hover:opacity-100 transition-opacity duration-300 pointer-events-none"></div>
         </div>
 
-        {/* Right Side - User Profile */}
-        <div className="flex items-center space-x-2 sm:space-x-4 flex-shrink-0 ml-auto"> {/* เพิ่ม ml-4 เพื่อให้มีระยะห่างจาก Search Bar */}
-          {/* Language Selector - ซ่อนบนมือถือเล็กๆ */}
-          <div className="  relative  sm:block">
-            <select className="appearance-none bg-white border border-gray-300 rounded-lg px-2 py-1 sm:px-3 sm:py-2 pr-6 sm:pr-8 text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-              <option>TH</option>
-              <option>EN</option>
+        {/* Right Side - Enhanced Controls */}
+        <div className="flex items-center space-x-3 sm:space-x-4 flex-shrink-0 ml-auto">
+          
+          {/* Enhanced Language Selector */}
+          <div className="relative group">
+            <select className="appearance-none bg-white/90 backdrop-blur-sm border-2 border-gray-200/50 rounded-xl px-3 py-2 sm:px-4 sm:py-2.5 pr-8 sm:pr-10 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all duration-300 cursor-pointer hover:bg-white hover:shadow-md">
+              <option>🇹🇭 TH</option>
+              <option>🇺🇸 EN</option>
             </select>
-            <div className="absolute inset-y-0 right-0 flex items-center px-1 sm:px-2 pointer-events-none">
-              <svg className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"/>
-              </svg>
+            <div className="absolute inset-y-0 right-0 flex items-center px-2 sm:px-3 pointer-events-none">
+              <FiChevronDown className="w-4 h-4 text-gray-400 group-hover:text-blue-500 transition-colors duration-200" />
             </div>
           </div>
 
-          {/* Notification Bell */}
-          <button className="relative p-1 sm:p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200">
-            <svg className="w-5 h-5 sm:w-6 sm:h-6" fill="currentColor" viewBox="0 0 20 20">
-              <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z"/>
-            </svg>
-            <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 sm:-top-1 sm:-right-1 sm:h-3 sm:w-3 bg-red-500 rounded-full"></span>
+          {/* Enhanced Notification Bell */}
+          <button className="relative group p-2.5 sm:p-3 text-gray-500 hover:text-white hover:bg-gradient-to-r hover:from-red-400 hover:to-pink-500 rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-lg hover:shadow-red-500/25">
+            <FiBell className="w-6 h-6 sm:w-7 sm:h-7 transition-transform duration-300 group-hover:rotate-12" />
+            {/* Enhanced notification badge */}
+            <span className="absolute -top-1 -right-1 h-5 w-5 bg-gradient-to-r from-red-500 to-pink-500 rounded-full flex items-center justify-center text-xs font-bold text-white animate-pulse shadow-lg">
+              3
+            </span>
+            <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-400 rounded-full animate-ping opacity-75"></span>
           </button>
 
+          {/* Enhanced Auth Section */}
           {isAuthenticated ? (
-            // ถ้าล็อกอินแล้ว 
-            <div className="flex items-center space-x-2">
-              <span className="text-gray-700 text-sm md:text-base hidden sm:block">
-                สวัสดี, <strong className="font-semibold">{user?.username}</strong>
-              </span>
-              <button
-                onClick={logout}
-                className="bg-red-500 shadow-xl shadow-red-500/50 hover:bg-red-400 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-sm transition-colors duration-200"
-              >
-                ออกจากระบบ
-              </button>
+            // This entire block is only rendered if the user is authenticated.
+            <div className="flex items-center space-x-3 sm:space-x-4">
+              {/* Desktop view: User profile and Logout button with text */}
+              <div className="hidden md:flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 border-2 border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
+                <div className="flex items-center space-x-2">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm">
+                    {user?.username?.charAt(0)?.toUpperCase() || 'U'}
+                  </div>
+                  <div className="text-gray-700">
+                    <span className="text-sm text-gray-500">สวัสดี,</span>
+                    <br />
+                    <strong className="font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                      {user?.username}
+                    </strong>
+                  </div>
+                </div>
+                <button
+                  onClick={handleLogout}
+                  className="group bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 text-white px-4 py-2.5 sm:px-5 sm:py-3 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 flex items-center space-x-2"
+                >
+                  <FiLogOut className="w-4 h-4 transition-transform duration-300 group-hover:rotate-12" />
+                  <span className="hidden sm:inline">ออกจากระบบ</span>
+                </button>
+              </div>
+
+              {/* Mobile view: Icon-only Logout button */}
+              <div className="flex md:hidden">
+                 <button
+                  onClick={handleLogout}
+                  className="group p-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 text-white rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/25"
+                  title="ออกจากระบบ"
+                >
+                  <FiLogOut className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
+                </button>
+              </div>
             </div>
           ) : (
-            // ถ้ายังไม่ล็อกอิน
-            <div className="flex space-x-1 sm:space-x-4">
-              <Link
-                to="/login"
-                className="bg-cyan-500 shadow-xl shadow-cyan-500/50 hover:bg-cyan-400 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-sm transition-colors duration-200"
-              >
-                เข้าสู่ระบบ
-              </Link>
-              <Link
-                to="/register"
-                className="bg-blue-600 shadow-xl shadow-blue-600/50 hover:bg-blue-500 text-white px-3 py-1.5 sm:px-4 sm:py-2 rounded-full font-medium text-sm transition-colors duration-200"
-              >
-                ลงทะเบียน
-              </Link>
+            <div className="flex space-x-2 sm:space-x-3">
+              {/* Desktop view: Login/Register buttons with text */}
+              <div className="hidden md:flex space-x-2 sm:space-x-3">
+                <Link
+                  to="/login"
+                  className="group bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white px-3 py-2 sm:px-5 sm:py-3 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25 flex items-center space-x-2"
+                >
+                  <FiLogIn className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                  <span>เข้าสู่ระบบ</span>
+                </Link>
+                <Link
+                  to="/register"
+                  className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white px-3 py-2 sm:px-5 sm:py-3 rounded-xl font-medium text-sm transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/25 flex items-center space-x-2"
+                >
+                  <FiUserPlus className="w-4 h-4 transition-transform duration-300 group-hover:scale-110" />
+                  <span>ลงทะเบียน</span>
+                </Link>
+              </div>
+
+              {/* Mobile view: Icon-only buttons */}
+              <div className="flex md:hidden space-x-2">
+                <Link
+                  to="/login"
+                  className="group p-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-cyan-500/25"
+                  title="เข้าสู่ระบบ"
+                >
+                  <FiLogIn className="w-5 h-5" />
+                </Link>
+                <Link
+                  to="/register"
+                  className="group p-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-blue-600/25"
+                  title="ลงทะเบียน"
+                >
+                  <FiUserPlus className="w-5 h-5" />
+                </Link>
+              </div>
             </div>
           )}
         </div>
       </div>
+
+      {/* Mobile Search Bar - Shows when needed */}
+      <div className="md:hidden mt-3 relative animate-slide-down">
+        <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+          <FiSearch className="h-5 w-5 text-gray-400" />
+        </div>
+        <input
+          type="text"
+          value={searchValue}
+          onChange={(e) => setSearchValue(e.target.value)}
+          className="block w-full pl-12 pr-6 py-3 border-2 border-gray-200/50 rounded-2xl leading-5 bg-white/80 backdrop-blur-sm placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-400 transition-all duration-300 shadow-sm"
+          placeholder="🔍 ค้นหาอาจารย์ กลุ่ม นัดหมาย..."
+        />
+      </div>
+
+      <style jsx>{`
+        @keyframes slide-down {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .animate-slide-down {
+          animation: slide-down 0.3s ease-out;
+        }
+      `}</style>
     </header>
   );
 }
