@@ -14,7 +14,7 @@ export default function Layout() {
   useEffect(() => {
     const handleResize = () => {
       // Sidebar จะเปิดอัตโนมัติเมื่อหน้าจอมีขนาดใหญ่กว่าหรือเท่ากับ 768px
-      setIsSidebarOpen(window.innerWidth >= 768);
+      // setIsSidebarOpen(window.innerWidth >= 768);
     };
 
     window.addEventListener("resize", handleResize);
@@ -36,7 +36,7 @@ export default function Layout() {
       )}
 
       {/* Sidebar Container */}
-      <div 
+      <div
         className={`fixed inset-y-0 left-0 z-50 flex-shrink-0 transition-transform duration-300 ease-in-out
           ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'}
           md:static md:translate-x-0
@@ -46,13 +46,13 @@ export default function Layout() {
       </div>
 
       {/* Main content area */}
-      <div 
+      <div
         className={`flex-grow flex flex-col transition-all duration-300 ease-in-out 
-          ${isSidebarOpen ? 'md:ml-72' : 'md:ml-20'}
-        `}
+    ${isSidebarOpen ? 'md:ml-72' : 'md:ml-20'}
+  `}
       >
         <Header isSidebarOpen={isSidebarOpen} toggleSidebar={toggleSidebar} />
-        
+
         {/* Main page content will be rendered here with overflow-y-auto to allow scrolling */}
         <main className="flex-grow p-4 md:p-10 lg:p-0 lg:px-0   overflow-y-auto">
           <Outlet />

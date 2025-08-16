@@ -1,24 +1,31 @@
 import { useState, useEffect } from 'react';
 import { Link , useNavigate} from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { FiLogOut, FiUserPlus, FiLogIn, FiBell, FiSearch, FiChevronDown } from "react-icons/fi";
+import { FiLogOut , FiUserPlus, FiLogIn, FiBell, FiSearch, FiChevronDown, FiX } from "react-icons/fi";
+import { CiSettings } from "react-icons/ci";
+
 
 export default function Header({ isSidebarOpen, toggleSidebar }) { 
   const [searchValue, setSearchValue] = useState('');
+  const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
   const {isAuthenticated, logout, user } = useAuth();
   const navigate = useNavigate();
 
   // A useEffect to log the authentication state for debugging purposes
-  useEffect(() => {
-    console.log('Authentication state changed. isAuthenticated:', isAuthenticated);
-    if (user) {
-      console.log('User:', user.username);
-    }
-  }, [isAuthenticated, user]);
+  // useEffect(() => {
+  //   console.log('Authentication state changed. isAuthenticated:', isAuthenticated);
+  //   if (user) {
+  //     console.log('User:', user.username);
+  //   }
+  // }, [isAuthenticated, user]);
 
   const handleLogout =()=>{
     logout();
     navigate('/login');
+  };
+
+  const toggleProfileMenu = () => {
+    setIsProfileMenuOpen(!isProfileMenuOpen);
   };
 
   return (
@@ -47,7 +54,7 @@ export default function Header({ isSidebarOpen, toggleSidebar }) {
         </button>
 
         {/* Enhanced Search Bar */}
-        <div className="relative flex-grow mx-190 hidden md:block max-w-sm lg:max-w-md ml-auto">
+        <div className="relative flex-grow mx-50 hidden md:block max-w-sm lg:max-w-md ml-auto">
           <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
             <FiSearch className="h-5 w-5 text-gray-400 transition-colors duration-200" />
           </div>
@@ -87,7 +94,6 @@ export default function Header({ isSidebarOpen, toggleSidebar }) {
 
           {/* Enhanced Auth Section */}
           {isAuthenticated ? (
-            // This entire block is only rendered if the user is authenticated.
             <div className="flex items-center space-x-3 sm:space-x-4">
               {/* Desktop view: User profile and Logout button with text */}
               <div className="hidden md:flex items-center space-x-3 bg-white/80 backdrop-blur-sm rounded-2xl px-4 py-2 border-2 border-gray-200/50 shadow-sm hover:shadow-md transition-all duration-300">
@@ -112,15 +118,46 @@ export default function Header({ isSidebarOpen, toggleSidebar }) {
                 </button>
               </div>
 
-              {/* Mobile view: Icon-only Logout button */}
-              <div className="flex md:hidden">
-                 <button
-                  onClick={handleLogout}
-                  className="group p-2 bg-gradient-to-r from-red-500 to-pink-500 hover:from-red-400 hover:to-pink-400 text-white rounded-xl transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-red-500/25"
-                  title="ออกจากระบบ"
+              {/* Mobile view: Profile button and dropdown menu */}
+              <div className="relative flex md:hidden">
+                <button 
+                  onClick={toggleProfileMenu} 
+                  className="w-10 h-10 bg-gradient-to-r from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-bold text-sm shadow-md hover:scale-105 transition-all duration-200"
                 >
-                  <FiLogOut className="w-5 h-5 transition-transform duration-300 group-hover:rotate-12" />
+                  {user?.username?.charAt(0)?.toUpperCase() || 'U'}
                 </button>
+                {isProfileMenuOpen && (
+                  <div className="absolute top-12 right-0 w-48 bg-white/95 backdrop-blur-xl rounded-xl shadow-lg border border-gray-200/50 overflow-hidden transform animate-fade-in-down origin-top">
+                    <div className="flex flex-col p-4 border-b border-gray-200/50">
+                      <span className="text-gray-500 text-xs">สวัสดีคุณ </span>
+                      <strong className="font-semibold text-gray-800 truncate">{user?.username}</strong>
+                    </div>
+                    <Link
+                      to="/profile"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="flex items-center space-x-2 p-4 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <FiUserPlus className="w-5 h-5" />
+                      <span>โปรไฟล์ของฉัน</span>
+                    </Link>
+
+                     <Link
+                      to="/profilesetting"
+                      onClick={() => setIsProfileMenuOpen(false)}
+                      className="flex items-center space-x-2 p-4 text-gray-700 hover:bg-gray-100 transition-colors duration-200"
+                    >
+                      <CiSettings  className="w-5 h-8 " />
+                      <span>โปรไฟล์ของฉัน</span>
+                    </Link>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full flex items-center space-x-2 p-4 text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors duration-200"
+                    >
+                      <FiLogOut className="w-5 h-5" />
+                      <span>ออกจากระบบ</span>
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
           ) : (
@@ -185,8 +222,17 @@ export default function Header({ isSidebarOpen, toggleSidebar }) {
           to { opacity: 1; transform: translateY(0); }
         }
         
+        @keyframes fade-in-down {
+          from { opacity: 0; transform: translateY(-10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
         .animate-slide-down {
           animation: slide-down 0.3s ease-out;
+        }
+
+        .animate-fade-in-down {
+          animation: fade-in-down 0.2s ease-out;
         }
       `}</style>
     </header>
