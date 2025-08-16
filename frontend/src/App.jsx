@@ -10,6 +10,11 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import MeetSumPage from "./pages/MeetSumPage.jsx";
 import GroupPage from "./pages/GroupPage.jsx";
 import AboutPages from "./pages/AboutPage.jsx";
+import CreateGroup from "./pages/CreateGroup";
+import AdminUsersPage from "./pages/AdminUsersPage";
+import AdminRoute from "./components/AdminRoutes";
+
+
 
 
 export default function App() {
@@ -59,7 +64,27 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="groups/create"
+          element={
+            <ProtectedRoute>
+              <CreateGroup />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/admin/users" element={
+          <ProtectedRoute>
+            <AdminUsersPage />
+          </ProtectedRoute>} />
       </Route>
+      <Route
+        path="/admin/users"
+        element={
+          <AdminRoute>
+            <AdminUsersPage />
+          </AdminRoute>
+        }
+      />
 
       {/* <Route path="*" component={NotFound} /> */}
     </Routes>

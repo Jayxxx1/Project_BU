@@ -2,37 +2,38 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import authService from '../services/authService';
 
 const AuthContext = createContext(null);
-
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(null);
+  const [user, setUser] = useState(null);     // user ต้องมี role มาด้วย
   const [token, setToken] = useState(null);
   const [loading, setLoading] = useState(true);
 
-
+  // โหลดจาก localStorage โครง { user, token }
   useEffect(() => {
-  const stored = localStorage.getItem('user');
-  if (stored) {
-    const parsed = JSON.parse(stored);
-    if (parsed.user && parsed.token) {
-      setUser(parsed.user);
-      setToken(parsed.token);
+    try {
+      const raw = localStorage.getItem('user');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (parsed?.user && parsed?.token) {
+          setUser(parsed.user);            // parsed.user.role ต้องมี
+          setToken(parsed.token);
+        }
+      }
+    } finally {
+      setLoading(false);
     }
-  }
-  setLoading(false);
-}, []);
+  }, []);
 
-  // ฟังก์ชัน Login (รับ email, password)
+  // Login: เก็บ { user, token } ลง localStorage (user ต้องมี role)
   const login = useCallback(async (email, password) => {
     setLoading(true);
     try {
       const data = await authService.login({ email, password });
-      // data ต้องมีรูปแบบ { user: {...}, token: '...' }
-      if (data && data.user && data.token) {
+      if (data?.user && data?.token) {
         setUser(data.user);
         setToken(data.token);
-        localStorage.setItem('user', JSON.stringify(data)); // เก็บคู่กัน user + token
+        localStorage.setItem('user', JSON.stringify(data));
       } else {
         throw new Error('Invalid login response');
       }
@@ -42,39 +43,45 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // ฟังก์ชัน Register (สร้าง user ใหม่) และ Auto login ต่อ
+  // Register → auto login
   const register = useCallback(async (username, email, password) => {
     setLoading(true);
     try {
       const data = await authService.register({ username, email, password });
-      // หลัง register สำเร็จ ล็อกอินอัตโนมัติ
-      if (data) {
-        // เรียก login อีกครั้ง หรือถ้า register คืน token/user มาเลยก็เซ็ตเลย
-        await login(email, password);
-      }
+      if (data) await login(email, password);
       return data;
     } finally {
       setLoading(false);
     }
   }, [login]);
 
-  // ฟังก์ชัน Logout
   const logout = useCallback(() => {
     setUser(null);
     setToken(null);
     localStorage.removeItem('user');
   }, []);
 
+  // ---------- flags สำหรับ guard ----------
+  const isAuthenticated = !!user && !!token;
+  const role = user?.role || null;
+  const isAdmin = role === 'admin';
+  const isTeacher = role === 'teacher';
+  const isStudent = role === 'student';
+
   return (
     <AuthContext.Provider
       value={{
         user,
+        role,
         token,
-        isAuthenticated: !!user && !!token,
+        isAuthenticated,
+        isAdmin,
+        isTeacher,
+        isStudent,
         loading,
         login,
         register,
-        logout
+        logout,
       }}
     >
       {children}

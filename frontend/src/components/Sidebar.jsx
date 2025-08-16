@@ -159,7 +159,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         </nav>
 
         {/* Desktop Logout button */}
-        <div className={`p-4 border-t border-gray-200/50 ${isSidebarOpen ? 'flex-col items-center' : 'flex justify-center'}`}>
+        {/* <div className={`p-4 border-t border-gray-200/50 ${isSidebarOpen ? 'flex-col items-center' : 'flex justify-center'}`}>
           <button
             onClick={toggleSidebar}
             className="group flex items-center justify-center p-3 text-gray-600 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-lg"
@@ -182,8 +182,8 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
               </svg>
               <span className="font-medium">ออกจากระบบ</span>
             </button>
-          )} */}
-        </div>
+          )} */} 
+        {/* </div> */}
       </aside>
 
       <style jsx>{`

@@ -1,57 +1,52 @@
 import axios from 'axios';
-const API_URL = '/api/appointments';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
-// สร้างนัดหมายใหม่
-export const createAppointment = async (data, token) => {
+function getToken() {
+  const direct =
+    localStorage.getItem('token') ||
+    localStorage.getItem('authToken') ||
+    localStorage.getItem('accessToken');
+  if (direct) return direct;
   try {
-    const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } };
-    const response = await axios.post(API_URL, data, config);
-    return response.data;
-  } catch (err) {
-    throw err?.response?.data?.message || 'เกิดข้อผิดพลาดขณะสร้างนัดหมาย';
-  }
+    const maybe =
+      JSON.parse(localStorage.getItem('user') || '{}') ||
+      JSON.parse(localStorage.getItem('userInfo') || '{}');
+    return maybe?.token || maybe?.accessToken || maybe?.jwt || null;
+  } catch { return null; }
+}
+
+// axios instance + interceptor
+const client = axios.create({ baseURL: API_URL });
+client.interceptors.request.use((config) => {
+  const t = getToken();
+  if (!config.headers) config.headers = {};
+  if (t) config.headers.Authorization = `Bearer ${String(t).replace(/^"|"$/g, '')}`;
+  return config;
+});
+
+export const appointmentService = {
+  async create(data) {
+    const r = await client.post('/api/appointments', data);
+    return r.data;
+  },
+  async list(params = {}) {
+    const r = await client.get('/api/appointments', { params });
+    return r.data;
+  },
+  async get(id) {
+    const r = await client.get(`/api/appointments/${id}`);
+    return r.data;
+  },
+  async update(id, data) {
+    const r = await client.patch(`/api/appointments/${id}`, data);
+    return r.data;
+  },
+  async remove(id) {
+    const r = await client.delete(`/api/appointments/${id}`);
+    return r.data;
+  },
 };
 
-// ดึงนัดหมายของผู้ใช้งาน
-export const getAppointments = async (token) => {
-  try {
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const response = await axios.get(API_URL, config);
-    return response.data;
-  } catch (err) {
-    throw err?.response?.data?.message || 'เกิดข้อผิดพลาดขณะดึงนัดหมาย';
-  }
-};
+export const getAppointments = (params = {}) => appointmentService.list(params);
 
-// ดึงนัดหมายตาม ID
-export const getAppointmentById = async (id, token) => {
-  try {
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const response = await axios.get(`${API_URL}/${id}`, config);
-    return response.data;
-  } catch (err) {
-    throw err?.response?.data?.message || 'เกิดข้อผิดพลาดขณะดึงข้อมูลนัดหมาย';
-  }
-};
 
-// อัปเดตนัดหมาย
-export const updateAppointment = async (id, data, token) => {
-  try {
-    const config = { headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` } };
-    const response = await axios.put(`${API_URL}/${id}`, data, config);
-    return response.data;
-  } catch (err) {
-    throw err?.response?.data?.message || 'เกิดข้อผิดพลาดขณะอัปเดตนัดหมาย';
-  }
-};
-
-// ลบนัดหมาย
-export const deleteAppointment = async (id, token) => {
-  try {
-    const config = { headers: { Authorization: `Bearer ${token}` } };
-    const response = await axios.delete(`${API_URL}/${id}`, config);
-    return response.data;
-  } catch (err) {
-    throw err?.response?.data?.message || 'เกิดข้อผิดพลาดขณะลบนัดหมาย';
-  }
-};

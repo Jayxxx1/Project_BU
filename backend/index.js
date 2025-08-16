@@ -1,61 +1,58 @@
 import express from 'express';
-import dotenv from 'dotenv';
-import cors from 'cors';
-import path from 'path';
 import mongoose from 'mongoose';
+import cors from 'cors';
+import morgan from 'morgan';
+import dotenv from 'dotenv';
+dotenv.config();
+
 import authRoutes from './routes/auth.js';
-import { errorHandler, notFound } from './middleware/errorMiddleware.js';
-// import { createAppointment, getMyAppointments, getAppointmentById, updateAppointment, deleteAppointment } from '../controllers/appointmentController.js';
+import appointmentsRoutes from './routes/appointments.js';
+import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
-
-dotenv.config({ path: path.resolve('./.env') });
-
-// เชื่อม MongoDB
-const connectDB = async () => {
-  try {
-    const conn = await mongoose.connect(process.env.ATLAS_URI);
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
-  } catch (error) {
-    console.error(`Error connecting to MongoDB: ${error.message}`);
-    process.exit(1);
-  }
-};
-connectDB();
+import adminRoutes from './routes/admin.js';
+import groupRoutes from './routes/groups.js';
+import teacherRoutes from './routes/teachers.js';
 
 const app = express();
-const PORT = process.env.PORT || 5000;
 
-// Middleware
-app.use(express.json());
-// app.use('/api/appointments', appointmentsRoutes);
+// CORS
+const allow = (process.env.CORS_ORIGIN || 'http://localhost:5173')
+  .split(',')
+  .map(s => s.trim());
+app.use(cors({ origin: allow, credentials: true }));
 
-app.use(cors({ origin: process.env.CORS_ORIGIN }));
+app.use(express.json({ limit: '1mb' }));
+app.use(morgan('dev'));
 
+// MongoDB
+const MONGO = process.env.ATLAS_URI;
+if (!MONGO) {
+  console.error('ATLAS_URI is missing in .env');
+  process.exit(1);
+}
+mongoose.set('strictQuery', true);
+mongoose
+  .connect(MONGO)
+  .then(() => console.log('MongoDB connected'))
+  .catch((err) => {
+    console.error('MongoDB error:', err.message);
+    process.exit(1);
+  });
 
-// Routes
+// ROUTES 
 app.use('/api/auth', authRoutes);
+app.use('/api/appointments', appointmentsRoutes);
+
+app.use('api/admin',adminRoutes)
+app.use('api/groups',groupRoutes)
+app.use('api/teachers',teacherRoutes)
+
+app.get(['/health', '/api/health'], (req, res) => res.json({ ok: true }));
+
+
+// 404 & ERROR HANDLERS (must be last)
 app.use(notFound);
 app.use(errorHandler);
-app.use(express.json());
 
-
-// const router = express.Router();
-// router.route('/')
-//   .post(protect, createAppointment)
-//   .get(protect, getMyAppointments);
-// router.route('/:id')
-//   .get(protect, getAppointmentById)
-//   .put(protect, updateAppointment)
-//   .delete(protect, deleteAppointment);
-
-
-
-// export default router;
-// Health check
-app.get('/', (req, res) => res.send('API is running...'));
-
-// Start server
-app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Server running on http://0.0.0.0:${PORT}`);
-});
-
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));

@@ -11,14 +11,18 @@ const userSchema = new mongoose.Schema(
     email: {
       type: String,
       required: [true, 'กรุณากรอกอีเมล'],
+      trim: [true],
       unique: true,
       match: [/.+@.+\..+/, 'กรุณากรอกอีเมลให้ถูกต้อง'],
     },
     password: {
       type: String,
       required: [true, 'กรุณากรอกรหัสผ่าน'],
-      // เอา minlength ออก เพราะเช็คใน route แล้ว
     },
+    role: {
+      type: String,
+      enum: ['Student', 'teacher', 'admin'], default: 'Student', index: true
+    }
   },
   { timestamps: true }
 );

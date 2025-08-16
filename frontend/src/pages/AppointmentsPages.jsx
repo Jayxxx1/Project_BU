@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from "react";
 import { useAuth } from "../contexts/AuthContext";
-import { getAppointments } from '../services/appointmentService';
+import { getAppointments } from "../services/appointmentService";
 import { Link } from "react-router-dom";
 import { AiFillPlusCircle, AiFillCalendar, AiFillClockCircle } from "react-icons/ai";
 import { MdLocationOn, MdPerson } from "react-icons/md";
-// import { IoMdCheckmarkCircleOutline, IoMdCloseCircleOutline, IoMdTimeOutline } from "react-icons/io";
+import { IoMdCheckmarkCircleOutline, IoMdCloseCircleOutline, IoMdTime } from "react-icons/io";
 
 export default function AppointmentsPage() {
   const { token } = useAuth();
@@ -16,9 +16,12 @@ export default function AppointmentsPage() {
       setLoading(false);
       return;
     }
-    getAppointments(token)
-      .then(setAppointments)
-      .catch(() => setAppointments([]))
+    getAppointments({})
+      .then((data) => setAppointments(Array.isArray(data) ? data : (data?.items || [])))
+      .catch((err) => {
+        console.error("Load appointments error:", err?.response?.data || err?.message);
+        setAppointments([]);
+      })
       .finally(() => setLoading(false));
   }, [token]);
 
@@ -32,7 +35,7 @@ export default function AppointmentsPage() {
         return <IoMdCloseCircleOutline className="text-red-500 text-xl" />;
       case 'pending':
       default:
-        return <IoMdTimeOutline className="text-yellow-500 text-xl" />;
+        return <IoMdTime className="text-yellow-500 text-xl" />;
     }
   };
 
@@ -72,7 +75,7 @@ export default function AppointmentsPage() {
       <div className="relative min-h-screen flex items-center justify-center">
         {/* div สำหรับภาพพื้นหลังที่เบลอ */}
         <div className="absolute inset-0 bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat backdrop-blur-xl"></div>
-        
+
         {/* div สำหรับเนื้อหาที่อยู่บนภาพเบลอ */}
         <div className="relative z-10 p-8">
           <div className="bg-white/95 rounded-2xl shadow-2xl p-8">
@@ -92,7 +95,7 @@ export default function AppointmentsPage() {
     <div className="relative min-h-screen">
       {/* div สำหรับภาพพื้นหลังที่เบลอ */}
       <div className="absolute inset-0 bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat backdrop-blur-xl"></div>
-      
+
       {/* div สำหรับเนื้อหาที่อยู่บนภาพเบลอ */}
       <div className="relative z-10 min-h-screen p-4 md:p-6 lg:p-8 flex flex-col items-center">
         {appointments.length === 0 ? (

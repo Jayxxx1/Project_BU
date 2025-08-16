@@ -4,16 +4,15 @@ import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import ConfirmAppointmentModal from "../components/ConfirmAppointmentModal.jsx";
 import FeedbackModal from "../components/FeedbackModal.jsx";
+import { groupService } from "../services/groupService.js";
 import { Calendar, Clock, MapPin, FileText } from "lucide-react";
-
 
 export default function CreateAppointment() {
   const { token } = useAuth();
   const navigate = useNavigate();
 
-  // Toggle file attach
   const [attachEnabled, setAttachEnabled] = useState(false);
-  // Form fields
+
   const [formData, setFormData] = useState({
     group: "",
     title: "",
@@ -26,94 +25,70 @@ export default function CreateAppointment() {
     note: "",
   });
   const [files, setFiles] = useState([]);
+
   const [groups, setGroups] = useState([]);
-  const [selectedGroup, setSelectedGroup] = useState(null);
+  // const [selectedGroupId, setSelectedGroupId] = useState(""); // id กลุ่มที่เลือก
+
   const [selectedProjectTitle, setSelectedProjectTitle] = useState("");
   const [selectedAdvisor, setSelectedAdvisor] = useState(null);
   const [members, setMembers] = useState([]);
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [showPreview, setShowPreview] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState("");
 
-  // Fetch groups (mock data for now)
+
   useEffect(() => {
-    async function fetchGroups() {
+    let alive = true;
+    (async () => {
       try {
-        // TODO: replace with actual API call to fetch user's groups
-        const result = [
-          {
-            id: "P04",
-            name: "P04 - กลุ่มพัฒนาเว็บแอปพลิเคชัน",
-            projectTitle: "ระบบบันทึกการนัดหมายและการประชุมระหว่างนักศึกษาและอาจารย์",
-            advisor: {
-              name: "ผศ.ดร. กิตย์ศิริ ",
-              email: "example@psu.ac.th",
-            },
-            members: [
-              { id: "67102010416", name: "นายเจษฎา เก็มเบ็นหมาด" },
-              { id: "67102010419", name: "นายชินกฤต  กุลวงษ์" },
-            ],
-          },
-          {
-            id: "P05",
-            name: "P05 - กลุ่มพัฒนาแอปมือถือ",
-            projectTitle: "ระบบแอปมือถือ",
-            advisor: {
-              name: "ผศ.ดร. สมชาย วิทยากร",
-              email: "somchai@university.ac.th",
-            },
-            members: [
-              { id: "67102010420", name: "สมาชิกรหัส 20" },
-              { id: "67102010421", name: "สมาชิกรหัส 21" },
-            ],
-          },
-        ];
-        setGroups(result);
+        const data = await groupService.listMine();
+        if (!alive) return;
+        setGroups(Array.isArray(data) ? data : []);
       } catch (err) {
+        if (!alive) return;
         setGroups([]);
       }
-    }
-    fetchGroups();
+    })();
+    return () => { alive = false; };
   }, [token]);
 
- useEffect(() => {
-    const group = groups.find((g) => g.id === formData.group);
-    setSelectedProjectTitle(group ? group.projectTitle : "");
-    setMembers(group ? group.members || [] : []);
-  }, [formData.group, groups]);
-  // Update selected group and advisor when group changes
-  useEffect(() => {
-    const group = groups.find((g) => g.id === formData.group);
-    setSelectedGroup(group || null);
-    setSelectedAdvisor(group ? group.advisor : null);
-    setMembers(group ? group.members || [] : []);
-  }, [formData.group, groups]);
 
-  // Handle input changes for text/select fields
+  useEffect(() => {
+    const grp = groups.find((g) => g._id === formData.group) || null;
+
+    setSelectedProjectTitle(grp?.name || "");
+    setMembers(grp?.members || []);
+    setSelectedAdvisor(
+      grp?.advisor
+        ? {
+          name: grp.advisor.username || grp.advisor.email,
+          email: grp.advisor.email,
+          _id: grp.advisor._id,
+        }
+        : null
+    );
+  },[formData.group,groups]);
+
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-  };
+      setFormData((prev) => ({ ...prev, [name]: value }));
+}
 
-  // Handle file selection
   const handleFileChange = (e) => {
     setFiles(Array.from(e.target.files));
   };
 
-  // Validate form fields before preview or submit
   const validateForm = () => {
     if (!formData.group) return "กรุณาเลือกกลุ่มของคุณ";
     if (!formData.title) return "กรุณากรอกหัวข้อการนัดหมาย";
     if (!formData.date) return "กรุณากรอกวันที่นัดหมาย";
-    if (!formData.startTime || !formData.endTime)
-      return "กรุณากรอกเวลานัดหมาย";
-    // Additional validations can go here
+    if (!formData.startTime || !formData.endTime) return "กรุณากรอกเวลานัดหมาย";
     return "";
   };
 
-  // Open preview modal if validation passes
   const handlePreview = (e) => {
     e.preventDefault();
     setError("");
@@ -125,64 +100,53 @@ export default function CreateAppointment() {
     setShowPreview(true);
   };
 
-  // Submit appointment (call API) when user confirms in modal
-  // const handleConfirmSubmit = async () => {
-  //   setLoading(true);
-  //   setError("");
-  //   try {
-  //     // Prepare FormData for file upload
-  //     const submitData = new FormData();
-  //     Object.entries(formData).forEach(([key, value]) => {
-  //       submitData.append(key, value);
-  //     });
-  //     if (attachEnabled) {
-  //       files.forEach((file) => {
-  //         submitData.append("files", file);
-  //       });
-  //     }
-  //     // Axios direct call because appointmentService does not support multipart yet
-  //     const config = {
-  //       headers: {
-  //         "Content-Type": "multipart/form-data",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     };
-  //     await axios.post("/api/appointments", submitData, config);
-  //     // Show feedback message and redirect after a delay
-  //     setShowPreview(false);
-  //     setFeedbackMsg(
-  //       "ระบบได้ส่งคำขอนัดหมายและอีเมลแจ้งเตือนไปยังอาจารย์แล้ว กรุณารอการยืนยัน"
-  //     );
-  //     setShowFeedback(true);
-  //     setTimeout(() => {
-  //       setShowFeedback(false);
-  //       navigate("/appointments");
-  //     }, 3000);
-  //   } catch (err) {
-  //     // Extract error message
-  //     let msg = "เกิดข้อผิดพลาดขณะสร้างนัดหมาย";
-  //     if (typeof err === "string") msg = err;
-  //     else if (err?.response?.data?.message) msg = err.response.data.message;
-  //     else if (err?.message) msg = err.message;
-  //     setError(msg);
-  //   } finally {
-  //     setLoading(false);
-  //   }
+  const handleConfirmSubmit = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      const payload = {
+        title: formData.title?.trim(),
+        description: formData.description?.trim() || "",
+        date: formData.date,
+        startTime: formData.startTime,
+        endTime: formData.endTime,
+        meetingType: formData.meetingType || "online",
+        location: (formData.location || "").trim(),
+        reason: "",
+        meetingNotes: (formData.note || "").trim(),
 
-  const handleConfirmSubmit = () => {
-  setLoading(true);
-  setError("");
-  setShowPreview(false);
-  setFeedbackMsg(
-    "ระบบได้ส่งคำขอนัดหมายและอีเมลแจ้งเตือนไปยังอาจารย์แล้ว กรุณารอการยืนยัน"
-  );
-  setShowFeedback(true);
-  setTimeout(() => {
-    setShowFeedback(false);
-    navigate("/appointments");
-  }, 3000);
-  setLoading(false);
-}
+        // สำคัญ: ผูกนัดหมายกับกลุ่มจริง
+        relatedGroup: formData.group || null,
+      };
+
+      if (selectedAdvisor?.email) {
+        payload.participantEmails = [selectedAdvisor.email];
+      }
+
+      const config = {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      };
+      await axios.post("/api/appointments", payload, config);
+
+      setShowPreview(false);
+      setFeedbackMsg("สร้างนัดหมายสำเร็จ");
+      setShowFeedback(true);
+      setTimeout(() => {
+        navigate("/appointments");
+      }, 800);
+    } catch (err) {
+      const msg = err?.response?.data?.message || "สร้างนัดหมายไม่สำเร็จ";
+      setFeedbackMsg(msg);
+      setShowFeedback(true);
+    } finally {
+      setLoading(false);
+    }
+  };
+  const selectedGroup = groups.find(g => g._id === formData.group) || null;
+
   return (
 
     <div className="min-h-screen flex items-center justify-center bg-[url('/bg/bg.webp')] bg-cover bg-center bg-no-repeat relative overflow-hidden">
@@ -207,11 +171,12 @@ export default function CreateAppointment() {
             </label>
             <select name="group" value={formData.group} onChange={handleChange} required className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50" >
               <option value="">เลือกกลุ่ม</option>
-              {groups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
+              {groups.map((g) => (
+                <option key={g._id} value={g._id}>
+                  {g.name}
                 </option>
               ))}
+
             </select>
           </div>
           {/* Advisor Info */}
@@ -345,7 +310,7 @@ export default function CreateAppointment() {
             </button>
           </div>
         </form>
-            
+
         <ConfirmAppointmentModal
           open={showPreview}
           onClose={() => setShowPreview(false)}

@@ -1,24 +1,24 @@
 import jwt from 'jsonwebtoken';
-import asyncHandler from 'express-async-handler';
 import User from '../models/User.js';
 
+export const protect = async (req, res, next) => {
+  try {
+    const hdr = req.headers.authorization || '';
+    const token = hdr.startsWith('Bearer ') ? hdr.slice(7) : null;
+    if (!token) return res.status(401).json({ message: 'No token provided' });
 
-export const protect = asyncHandler(async (req, res, next) => {
-  let token;
-  if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-    try {
-      token = req.headers.authorization.split(' ')[1];
-      console.log('Auth header:', req.headers.authorization);
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = await User.findById(decoded.id).select('-password');
-      next();
-    } catch (error) {
-      res.status(401);
-      throw new Error('ไม่สามารถตรวจสอบ token');
-    }
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id || decoded._id).select('_id username email role');
+    if (!user) return res.status(401).json({ message: 'User not found' });
+
+    req.user = { id: user._id, username: user.username, email: user.email, role: user.role || 'student' };
+    next();
+  } catch (e) {
+    return res.status(401).json({ message: 'Invalid or expired token' });
   }
-  if (!token) {
-    res.status(401);
-    throw new Error('ไม่ได้รับ token');
-  }
-});
+};
+
+export const requireRole = (...roles) => (req, res, next) => {
+  if (!req.user || !roles.includes(req.user.role)) return res.status(403).json({ message: 'Forbidden' });
+  next();
+};
