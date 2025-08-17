@@ -73,8 +73,7 @@ export default function AppointmentsPage() {
   if (loading) {
     return (
       <div className="relative min-h-screen flex items-center justify-center">
-        {/* div สำหรับภาพพื้นหลังที่เบลอ */}
-        <div className="absolute inset-0 bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat backdrop-blur-xl"></div>
+        <div className="absolute inset-0 bg-[url('/bg/bg.webp')] bg-cover bg-center bg-no-repeat backdrop-blur-xl"></div>
 
         {/* div สำหรับเนื้อหาที่อยู่บนภาพเบลอ */}
         <div className="relative z-10 p-8">

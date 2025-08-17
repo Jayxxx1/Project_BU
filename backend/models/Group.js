@@ -1,12 +1,20 @@
 import mongoose from 'mongoose';
 
-const GroupSchema = new mongoose.Schema({
-  name:        { type: String, required: true, trim: true, maxlength: 120 },
-  description: { type: String, trim: true, default: '' },
-  advisor:     { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true }, // อาจารย์
-  members:     [{ type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true }],               // นศ.
-  createdBy:   { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true, index: true },
-  status:      { type: String, enum: ['active','archived'], default: 'active', index: true },
+const { Schema } = mongoose;
+
+
+const groupSchema = new Schema({
+  groupNumber: { type: String, required: true, trim: true, index: true },
+  name:        { type: String, required: true, trim: true },
+  description: { type: String, default: '' },
+
+  advisor:   { type: Schema.Types.ObjectId, ref: 'User', required: true },
+  members:   [{ type: Schema.Types.ObjectId, ref: 'User' }],
+  createdBy: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+
+  status: { type: String, enum: ['active','archived'], default: 'active', index: true },
 }, { timestamps: true });
 
-export default mongoose.model('Group', GroupSchema); 
+groupSchema.index({ name: 1, advisor: 1 });
+
+export default mongoose.model('Group', groupSchema);

@@ -7,7 +7,8 @@ import { Users, GraduationCap, PlusCircle } from "lucide-react";
 
 export default function CreateGroup() {
   const navigate = useNavigate();
-
+  const [selectedMembers, setSelectedMembers] = useState([]);
+  const [groupNumber, setGroupNumber] = useState("");
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [advisorId, setAdvisorId] = useState("");
@@ -20,6 +21,49 @@ export default function CreateGroup() {
 
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState("");
+
+  const [userSuggestions, setUserSuggestions] = useState([]);
+  const [userSearchTerm, setUserSearchTerm] = useState("");
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  // Function to get the current user's ID from localStorage
+  const getCurrentUserId = () => {
+    try {
+      const raw = localStorage.getItem('user');
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      return parsed?.user?._id || null;
+    } catch {
+      return null;
+    }
+  };
+
+  useEffect(() => {
+    // Set the current user's ID on component mount
+    setCurrentUserId(getCurrentUserId());
+  }, []);
+
+  const handleSearchUsers = async (q) => {
+    if (q.trim().length < 2) {
+      setUserSuggestions([]);
+      return;
+    }
+    // Pass the current user's ID to the search function to exclude themselves
+    const results = await groupService.searchUsers({ q, role: 'student', excludeIds: currentUserId ? [currentUserId] : [] });
+    setUserSuggestions(results);
+  };
+
+  const addMember = (u) => {
+    if (!selectedMembers.some(member => member._id === u._id)) {
+      setSelectedMembers((prev) => [...prev, u]);
+    }
+    setUserSuggestions([]);
+    setUserSearchTerm("");
+  };
+
+  const removeMember = (uid) => {
+    setSelectedMembers((prev) => prev.filter((member) => member._id !== uid));
+  };
 
   useEffect(() => {
     let alive = true;
@@ -48,9 +92,11 @@ export default function CreateGroup() {
     setError("");
     try {
       await groupService.create({
+        groupNumber: groupNumber.trim(),
         name: name.trim(),
         description: description.trim(),
         advisorId,
+        memberIds: selectedMembers.map(m => m._id),
       });
       setFeedbackMsg("สร้างกลุ่มสำเร็จ");
       setShowFeedback(true);
@@ -79,8 +125,19 @@ export default function CreateGroup() {
               {error}
             </div>
           )}
-
-          {/* ชื่อกลุ่ม */}
+          {/* Group Number */}
+          <div>
+            <label className="block font-semibold mb-2 text-gray-700 text-base md:text-lg">
+              หมายเลขกลุ่ม
+            </label>
+            <input
+              value={groupNumber}
+              onChange={(e) => setGroupNumber(e.target.value)}
+              placeholder="เช่น 01"
+              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
+            />
+          </div>
+          {/* Group Name */}
           <div>
             <label className="block font-semibold mb-2 text-gray-700 text-base md:text-lg">
               ชื่อกลุ่ม <span className="text-red-500">*</span>
@@ -94,8 +151,70 @@ export default function CreateGroup() {
               className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
             />
           </div>
+          {/* Add Members */}
+          <div>
+            <label className="block font-semibold mb-2 text-gray-700 text-base md:text-lg">
+              เพิ่มสมาชิก (นักศึกษา)
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="ค้นหานักศึกษาด้วยชื่อหรืออีเมล..."
+                className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
+                value={userSearchTerm}
+                onChange={(e) => {
+                  setUserSearchTerm(e.target.value);
+                  if (e.target.value.trim().length > 1) {
+                    handleSearchUsers(e.target.value);
+                  } else {
+                    setUserSuggestions([]);
+                  }
+                }}
+              />
+              {userSuggestions.length > 0 && (
+                <ul className="absolute z-20 mt-1 w-full bg-white border border-gray-200 rounded-xl shadow-lg max-h-60 overflow-y-auto">
+                  {userSuggestions.map((user) => (
+                    <li
+                      key={user._id}
+                      className="p-3 cursor-pointer hover:bg-gray-100 flex items-center justify-between"
+                      onClick={() => addMember(user)}
+                    >
+                      <div>
+                        <span className="font-medium">{user.username || user.email}</span>
+                        <span className="text-sm text-gray-500 ml-2">({user.email})</span>
+                      </div>
+                      <PlusCircle className="w-5 h-5 text-blue-500 flex-shrink-0" />
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </div>
+          </div>
 
-          {/* คำอธิบาย */}
+          {/* Selected Members */}
+          {selectedMembers.length > 0 && (
+            <div className="mt-4">
+              <h4 className="font-semibold text-gray-700 mb-2">สมาชิกในกลุ่ม ({selectedMembers.length})</h4>
+              <div className="flex flex-wrap gap-2">
+                {selectedMembers.map((member) => (
+                  <div
+                    key={member._id}
+                    className="bg-gray-100 text-gray-700 rounded-full px-4 py-2 flex items-center gap-2"
+                  >
+                    <span>{member.username || member.email}</span>
+                    <button
+                      type="button"
+                      className="text-gray-500 hover:text-red-500"
+                      onClick={() => removeMember(member._id)}
+                    >
+                      <Users className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {/* Description */}
           <div>
             <label className="block font-semibold mb-2 text-gray-700 text-base md:text-lg">คำอธิบาย</label>
             <textarea
@@ -107,7 +226,7 @@ export default function CreateGroup() {
             />
           </div>
 
-          {/* เลือกอาจารย์ที่ปรึกษา */}
+          {/* Advisor */}
           <div>
             <div className="flex items-end justify-between gap-3">
               <label className="block font-semibold text-gray-700 text-base md:text-lg">
@@ -140,7 +259,9 @@ export default function CreateGroup() {
             </div>
           </div>
 
-          {/* ปุ่ม */}
+
+
+          {/* Buttons */}
           <div className="flex items-center justify-between pt-2">
             <Link
               to="/groups"

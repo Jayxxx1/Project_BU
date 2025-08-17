@@ -72,20 +72,15 @@ export default function App() {
             </ProtectedRoute>
           }
         />
-        <Route path="/admin/users" element={
-          <ProtectedRoute>
-            <AdminUsersPage />
-          </ProtectedRoute>} />
+        <Route
+          path="/admin/users"
+          element={
+            <AdminRoute>
+              <AdminUsersPage />
+            </AdminRoute>
+          }
+        />
       </Route>
-      <Route
-        path="/admin/users"
-        element={
-          <AdminRoute>
-            <AdminUsersPage />
-          </AdminRoute>
-        }
-      />
-
       {/* <Route path="*" component={NotFound} /> */}
     </Routes>
   );

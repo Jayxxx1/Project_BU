@@ -21,17 +21,32 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ['Student', 'teacher', 'admin'], default: 'Student', index: true
-    }
+      enum: ['student', 'teacher', 'admin'], default: 'student', index: true
+    },
+    fullName: {
+      type: String, trim: true, default: ''
+    },
+    studentId: {
+      type: String,
+      trim: true,
+      required: function () { return this.role === 'student'; },
+    },
+
   },
   { timestamps: true }
 );
 
+
+userSchema.index(
+  { studentId: 1 },
+  { unique: true, partialFilterExpression: { role: 'student', studentId: { $type: 'string' } } }
+);
 
 // Method ตรวจสอบรหัสผ่าน
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
 
-const User = mongoose.model('User', userSchema);
-export default User;
+// const User = mongoose.model('User', userSchema);
+
+export default mongoose.model('User', userSchema);

@@ -15,7 +15,6 @@ function getToken() {
   } catch { return null; }
 }
 
-// axios instance + interceptor
 const client = axios.create({ baseURL: API_URL });
 client.interceptors.request.use((config) => {
   const t = getToken();

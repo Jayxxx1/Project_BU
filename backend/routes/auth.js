@@ -10,7 +10,7 @@ const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
-    console.log(' Register body:', JSON.stringify(req.body));
+  console.log(' Register body:', JSON.stringify(req.body));
   const { username, email, password } = req.body;
   if (!username || !email || !password) {
     return res
@@ -38,7 +38,14 @@ router.post('/register', async (req, res) => {
     });
     res.status(201).json({
       token,
-      user: { id: newUser._id, username: newUser.username, email: newUser.email },
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        fullName: user.fullName || '',
+        studentId: user.studentId || null,
+      },
     });
   } catch (error) {
     if (error.name === 'ValidationError') {
@@ -65,20 +72,27 @@ router.post('/login', async (req, res) => {
     const user = await User.findOne({ email });
     // console.log('Raw login body:', JSON.stringify(req.body));
     // console.log('Password from client:', JSON.stringify(password));
-if (!user || !(await bcrypt.compare(password, user.password))) {
-        // console.log('User found:', user);
+    if (!user || !(await bcrypt.compare(password, user.password))) {
+      // console.log('User found:', user);
       // console.log('Comparing password:', password, '=>', user.password);
       // console.log('Compare result:', await bcrypt.compare(password, user.password));
       return res
         .status(401)
-.json({ message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' });
+        .json({ message: 'อีเมลหรือรหัสผ่านไม่ถูกต้อง กรุณาลองใหม่อีกครั้ง' });
     }
     const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
       expiresIn: '99d',
     });
     res.json({
       token,
-      user: { id: user._id, username: user.username, email: user.email },
+      user: {
+        id: user._id,
+        username: user.username,
+        email: user.email,
+        role: user.role,
+        fullName: user.fullName || '',
+        studentId: user.studentId || null,
+      },
     });
   } catch (error) {
     console.error('Login error:', error);
