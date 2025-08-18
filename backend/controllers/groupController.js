@@ -81,7 +81,7 @@ export const updateGroup = async (req, res, next) => {
 
     const requesterId = ensureRequester(req);
     if (toStrId(g.createdBy) !== requesterId && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ลบกลุ่ม !' });
     }
 
     const { name, description, advisorId, status, groupNumber } = req.body;
@@ -114,7 +114,7 @@ export const deleteGroup = async (req, res, next) => {
 
     const requesterId = ensureRequester(req);
     if (toStrId(g.createdBy) !== requesterId && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ลบกลุ่ม !' });
     }
 
     await g.deleteOne();
@@ -180,7 +180,7 @@ export const addMembers = async (req, res, next) => {
 
     const requesterId = ensureRequester(req);
     if (toStrId(g.createdBy) !== requesterId && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ลบกลุ่ม !' });
     }
 
     const addList = [];
@@ -215,7 +215,7 @@ export const removeMembers = async (req, res, next) => {
 
     const requesterId = ensureRequester(req);
     if (toStrId(g.createdBy) !== requesterId && req.user.role !== 'admin') {
-      return res.status(403).json({ message: 'Forbidden' });
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ลบกลุ่ม !' });
     }
 
     const removeList = memberIds

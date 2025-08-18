@@ -123,7 +123,7 @@ export const getAppointmentById = async (req, res, next) => {
 
     const uid = req.user._id;
     const authorized = doc.createBy._id.equals(uid) || doc.participants.some(p => p._id.equals(uid));
-    if (!authorized) return res.status(403).json({ message: 'Forbidden' });
+    if (!authorized) return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ในการลบกลุ่ม !' });
 
     res.json(doc);
   } catch (e) { next(e); }
