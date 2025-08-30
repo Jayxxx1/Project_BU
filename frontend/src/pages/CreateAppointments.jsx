@@ -4,7 +4,7 @@ import { useAuth } from "../contexts/AuthContext";
 import axios from "axios";
 import ConfirmAppointmentModal from "../components/ConfirmAppointmentModal.jsx";
 import FeedbackModal from "../components/FeedbackModal.jsx";
-import { groupService } from "../services/groupService.js";
+import { projectService } from "../services/projectService.js";
 import { Calendar, Clock, MapPin, FileText } from "lucide-react";
 
 export default function CreateAppointment() {
@@ -15,7 +15,7 @@ export default function CreateAppointment() {
   const [attachEnabled, setAttachEnabled] = useState(false);
 
   const [formData, setFormData] = useState({
-    group: "",
+    project: "",
     title: "",
     description: "",
     date: "",
@@ -27,7 +27,7 @@ export default function CreateAppointment() {
   });
   const [files, setFiles] = useState([]);
 
-  const [groups, setGroups] = useState([]);
+  const [projects, setProjects] = useState([]);
   const [selectedProjectTitle, setSelectedProjectTitle] = useState("");
   const [selectedAdvisor, setSelectedAdvisor] = useState(null);
   const [members, setMembers] = useState([]);
@@ -42,12 +42,12 @@ export default function CreateAppointment() {
     let alive = true;
     (async () => {
       try {
-        const data = await groupService.listMine();
+        const data = await projectService.listMine();
         if (!alive) return;
-        setGroups(Array.isArray(data) ? data : []);
+        setProjects(Array.isArray(data) ? data : []);
       } catch {
         if (!alive) return;
-        setGroups([]);
+        setProjects([]);
       }
     })();
     return () => {
@@ -56,21 +56,22 @@ export default function CreateAppointment() {
   }, [token]);
 
   useEffect(() => {
-    const grp = groups.find((g) => g._id === formData.group) || null;
-
-    setSelectedProjectTitle(grp?.name || "");
-    setMembers(grp?.members || []);
+    const proj = projects.find((p) => p._id === formData.project) || null;
+    setSelectedProjectTitle(proj?.name || "");
+    setMembers(proj?.members || []);
     setSelectedAdvisor(
-      grp?.advisor
+      proj?.advisor
         ? {
-            // ใช้ fullName ถ้ามี เพื่อให้ตรง requirement
-            name: grp.advisor.fullName || grp.advisor.username || grp.advisor.email,
-            email: grp.advisor.email,
-            _id: grp.advisor._id,
+            name:
+              proj.advisor.fullName ||
+              proj.advisor.username ||
+              proj.advisor.email,
+            email: proj.advisor.email,
+            _id: proj.advisor._id,
           }
         : null
     );
-  }, [formData.group, groups]);
+  }, [formData.project, projects]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,7 +83,7 @@ export default function CreateAppointment() {
   };
 
   const validateForm = () => {
-    if (!formData.group) return "กรุณาเลือกกลุ่มของคุณ";
+    if (!formData.project) return "กรุณาเลือกโปรเจคของคุณ";
     if (!formData.title) return "กรุณากรอกหัวข้อการนัดหมาย";
     if (!formData.date) return "กรุณากรอกวันที่นัดหมาย";
     if (!formData.startTime || !formData.endTime) return "กรุณากรอกเวลานัดหมาย";
@@ -134,7 +135,7 @@ export default function CreateAppointment() {
         location: (formData.location || "").trim(),
         reason: "",
         meetingNotes: (formData.note || "").trim(),
-        relatedGroup: formData.group || null,
+        project: formData.project || null,
       };
 
       if (selectedAdvisor?.email) {
@@ -163,8 +164,7 @@ export default function CreateAppointment() {
     }
   };
 
-  const selectedGroup = groups.find((g) => g._id === formData.group) || null;
-
+  const selectedProject = projects.find((p) => p._id === formData.project) || null;
   return (
     <div className="min-h-screen flex items-center justify-center bg-[url('/bg/bg.webp')] bg-cover bg-center bg-no-repeat relative overflow-hidden">
       {/* Background blur overlay */}
@@ -183,20 +183,20 @@ export default function CreateAppointment() {
             </div>
           )}
 
-          {/* Group Select */}
+          {/* Project Select */}
           <div>
-            <label className="block font-semibold mb-3 text-gray-700 text-base md:text-lg">กลุ่มของคุณ</label>
+            <label className="block font-semibold mb-3 text-gray-700 text-base md:text-lg">โปรเจคของคุณ</label>
             <select
-              name="group"
-              value={formData.group}
+              name="project"
+              value={formData.project}
               onChange={handleChange}
               required
               className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
             >
-              <option value="">เลือกกลุ่ม</option>
-              {groups.map((g) => (
-                <option key={g._id} value={g._id}>
-                  {g.name}
+              <option value="">เลือกโปรเจค</option>
+              {projects.map((p) => (
+                <option key={p._id} value={p._id}>
+                  {p.name}
                 </option>
               ))}
             </select>
@@ -418,7 +418,7 @@ export default function CreateAppointment() {
           onConfirm={handleConfirmSubmit}
           formData={formData}
           files={files}
-          groupInfo={selectedGroup}
+          projectInfo={selectedProject}
           members={members}
           advisor={selectedAdvisor}
           student={(user?.user || user) ?? null}  // << ส่งผู้ใช้ปัจจุบันเข้า modal

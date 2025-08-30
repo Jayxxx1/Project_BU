@@ -10,19 +10,24 @@ const router = express.Router();
 
 // Register
 router.post('/register', async (req, res) => {
-  console.log(' Register body:', JSON.stringify(req.body));
-  const { username, email, password } = req.body;
+  const { username, email, password, role, studentId, fullName = '' } = req.body;
+  // ตรวจสอบข้อมูลเบื้องต้น
   if (!username || !email || !password) {
-    return res
-      .status(400)
-      .json({ message: 'กรุณากรอกชื่อผู้ใช้ อีเมล และรหัสผ่านให้ครบถ้วน' });
+    return res.status(400).json({ message: 'กรุณากรอกชื่อผู้ใช้ อีเมล และรหัสผ่านให้ครบถ้วน' });
   }
   if (password.length < 6) {
-    return res
-      .status(400)
-      .json({ message: 'รหัสผ่านควรมีความยาวอย่างน้อย 6 ตัวอักษร' });
+    return res.status(400).json({ message: 'รหัสผ่านควรมีความยาวอย่างน้อย 6 ตัวอักษร' });
   }
-
+  // กำหนดบทบาท: ถ้าไม่ระบุถือว่าเป็น student
+  const userRole = role || 'student';
+  // ไม่อนุญาตให้สมัครเป็น teacher หรือ admin ด้วยตนเอง
+  if (userRole !== 'student') {
+    return res.status(403).json({ message: 'ไม่สามารถสมัครบทบาทนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' });
+  }
+  // นักศึกษาต้องมี studentId
+  if (userRole === 'student' && !studentId) {
+    return res.status(400).json({ message: 'กรุณากรอกรหัสนักศึกษา' });
+  }
   try {
     if (await User.findOne({ email })) {
       return res.status(400).json({ message: 'อีเมลนี้ถูกใช้งานแล้ว' });
@@ -30,21 +35,31 @@ router.post('/register', async (req, res) => {
     if (await User.findOne({ username })) {
       return res.status(400).json({ message: 'ชื่อผู้ใช้นี้ถูกใช้งานแล้ว' });
     }
+    // ตรวจสอบ studentId ซ้ำสำหรับนักศึกษา
+    if (userRole === 'student' && await User.findOne({ studentId })) {
+      return res.status(400).json({ message: 'รหัสนักศึกษานี้ถูกใช้งานแล้ว' });
+    }
     const hashed = await bcrypt.hash(password, await bcrypt.genSalt(10));
-    const newUser = await User.create({ username, email, password: hashed });
-
+    const newUser = await User.create({
+      username,
+      email,
+      password: hashed,
+      role: userRole,
+      studentId: userRole === 'student' ? studentId : undefined,
+      fullName: fullName.trim() || '',
+    });
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, {
       expiresIn: '7d',
     });
     res.status(201).json({
       token,
       user: {
-        id: user._id,
-        username: user.username,
-        email: user.email,
-        role: user.role,
-        fullName: user.fullName || '',
-        studentId: user.studentId || null,
+        id: newUser._id,
+        username: newUser.username,
+        email: newUser.email,
+        role: newUser.role,
+        fullName: newUser.fullName || '',
+        studentId: newUser.studentId || null,
       },
     });
   } catch (error) {
@@ -53,9 +68,7 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: messages.join(', ') });
     }
     console.error('Register error:', error);
-    res
-      .status(500)
-      .json({ message: 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์', error: error.message });
+    res.status(500).json({ message: 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์', error: error.message });
   }
 });
 

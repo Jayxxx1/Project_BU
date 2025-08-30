@@ -8,30 +8,28 @@ import AppointmentsPages from "./pages/AppointmentsPages.jsx";
 import CreateAppointment from "./pages/CreateAppointments.jsx";
 import ProtectedRoute from "./components/ProtectedRoute";
 import MeetSumPage from "./pages/MeetSumPage.jsx";
-import GroupPage from "./pages/GroupPage.jsx";
+import ProjectsPage from "./pages/ProjectPage.jsx";
 import AboutPages from "./pages/AboutPage.jsx";
-import CreateGroup from "./pages/CreateGroup";
+import CreateProject from "./pages/CreateProject.jsx";
 import AdminUsersPage from "./pages/AdminUsersPage";
 import AdminRoute from "./components/AdminRoutes";
-
-
-
+// detail pages (ในโปรเจ็กต์ของคุณอยู่ใน components)
+import ProjectDetail from "./components/ProjectDetail.jsx";
+import AppointmentDetail from "./components/AppointmentDetail.jsx";
 
 export default function App() {
   return (
     <Routes>
-      {/*public routes*/}
+      {/* public routes */}
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
 
-      {/* public sidebar routes */}
+      {/* routes under Layout */}
       <Route path="/" element={<Layout />}>
         <Route index element={<MainContent />} />
-        <Route path="/about" element={<AboutPages />} />
-      </Route>
+        <Route path="about" element={<AboutPages />} />
 
-      {/* protect routes */}
-      <Route path="/" element={<Layout />}>
+        {/* appointments */}
         <Route
           path="appointments"
           element={
@@ -48,6 +46,42 @@ export default function App() {
             </ProtectedRoute>
           }
         />
+        {/* ✅ เปลี่ยนเป็นมาตรฐาน UI: /appointments/:id */}
+        <Route
+          path="appointments/:id"
+          element={
+            <ProtectedRoute>
+              <AppointmentDetail />
+            </ProtectedRoute>
+          }
+        />
+
+        {/* projects (คงตามเดิมเพื่อไม่ให้ลิงก์อื่นพัง) */}
+        <Route
+          path="projects"
+          element={
+            <ProtectedRoute>
+              <ProjectsPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="projects/create"
+          element={
+            <ProtectedRoute>
+              <CreateProject />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="projects/details/:id"
+          element={
+            <ProtectedRoute>
+              <ProjectDetail />
+            </ProtectedRoute>
+          }
+        />
+
         <Route
           path="meetsummary"
           element={
@@ -57,23 +91,7 @@ export default function App() {
           }
         />
         <Route
-          path="groups"
-          element={
-            <ProtectedRoute>
-              <GroupPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="groups/create"
-          element={
-            <ProtectedRoute>
-              <CreateGroup />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/users"
+          path="admin/users"
           element={
             <AdminRoute>
               <AdminUsersPage />
@@ -81,7 +99,6 @@ export default function App() {
           }
         />
       </Route>
-      {/* <Route path="*" component={NotFound} /> */}
     </Routes>
   );
 }

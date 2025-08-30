@@ -8,8 +8,8 @@ dotenv.config();
 import authRoutes from './routes/auth.js';
 import appointmentsRoutes from './routes/appointments.js';
 import adminRoutes from './routes/admin.js';
-import groupRoutes from './routes/groups.js';
 import teacherRoutes from './routes/teachers.js';
+import projectRoutes from './routes/projects.js';
 
 import { notFound, errorHandler } from './middleware/errorMiddleware.js';
 
@@ -40,8 +40,9 @@ mongoose.connect(MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/admin', adminRoutes);
-app.use('/api/groups', groupRoutes);
+// แทนที่กลุ่มด้วย projects แล้ว ดังนั้นเราไม่ได้ใช้ /api/groups อีกต่อไป
 app.use('/api/teachers', teacherRoutes);
+app.use('/api/projects', projectRoutes);
 
 // Health
 app.get(['/health', '/api/health'], (req, res) => res.json({ ok: true }));

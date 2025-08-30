@@ -218,8 +218,12 @@ export default function AppointmentsPage() {
 
                       {/* Action Button */}
                       <button className="px-4 py-2 text-sm bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-purple-500 hover:text-white rounded-lg transition-all duration-300 font-medium">
-                        รายละเอียด
-                      </button>
+                        <Link
+                          to={`/appointments/${appointment._id}`}
+                          className="px-4 py-2 text-sm bg-gradient-to-r from-gray-100 to-gray-200 hover:from-blue-500 hover:to-purple-500 hover:text-white rounded-lg transition-all duration-300 font-medium"
+                        >
+                          รายละเอียด
+                        </Link>                    </button>
                     </div>
                   </div>
 

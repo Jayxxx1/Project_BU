@@ -28,24 +28,31 @@ export const appointmentService = {
     const r = await client.post('/api/appointments', data);
     return r.data;
   },
+
   async list(params = {}) {
     const r = await client.get('/api/appointments', { params });
     return r.data;
   },
+
+  // เรียก /api/appointments/:id เท่านั้น (ตัด fallback /detail)
   async get(id) {
-    const r = await client.get(`/api/appointments/${id}`);
+    if (!id) throw new Error('Invalid appointment id');
+    const safeId = encodeURIComponent(String(id));
+    const r = await client.get(`/api/appointments/${safeId}`);
     return r.data;
   },
+
   async update(id, data) {
-    const r = await client.patch(`/api/appointments/${id}`, data);
+    const safeId = encodeURIComponent(String(id));
+    const r = await client.patch(`/api/appointments/${safeId}`, data);
     return r.data;
   },
+
   async remove(id) {
-    const r = await client.delete(`/api/appointments/${id}`);
+    const safeId = encodeURIComponent(String(id));
+    const r = await client.delete(`/api/appointments/${safeId}`);
     return r.data;
   },
 };
 
 export const getAppointments = (params = {}) => appointmentService.list(params);
-
-

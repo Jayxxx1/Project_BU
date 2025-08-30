@@ -44,10 +44,12 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Register → auto login
-  const register = useCallback(async (username, email, password) => {
+  const register = useCallback(async (username, email, password, studentId, fullName = '') => {
     setLoading(true);
     try {
-      const data = await authService.register({ username, email, password });
+      // ส่งข้อมูลเพิ่มเติมไปยัง backend เช่น studentId และ fullName
+      const data = await authService.register({ username, email, password, studentId, fullName });
+      // สำเร็จแล้วทำการ login อัตโนมัติ
       if (data) await login(email, password);
       return data;
     } finally {

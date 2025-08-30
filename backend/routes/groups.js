@@ -1,31 +1,16 @@
+/*
+ * ไฟล์ groups.js นี้ถูกแทนที่ด้วย projects.js
+ * ระบบไม่ได้ใช้ /api/groups อีกต่อไป
+ * คงไว้เพื่อความเข้ากันได้ แต่ตอบกลับแจ้งว่า endpoint นี้ย้ายไปแล้ว
+ */
 import express from 'express';
-import { protect } from '../middleware/AuthMiddleware.js';
-import {
-  createGroup,
-  listMyGroups,
-  updateGroup,
-  deleteGroup,
-  searchUsers,
-  addMembers,
-  removeMembers,
-} from '../controllers/groupController.js';
-
+import { protect } from '../middleware/authMiddleware.js';
 const router = express.Router();
 router.use(protect);
 
-// ดึงกลุ่มที่เกี่ยวข้องกับฉัน 
-router.get('/mine', listMyGroups);
-
-// สร้าง/แก้ไข/ลบกลุ่ม
-router.post('/', createGroup);
-router.patch('/:id', updateGroup);
-router.delete('/:id', deleteGroup);
-
-// ค้นหา user เพื่อเพิ่มสมาชิก 
-router.get('/search-users', searchUsers);
-
-// จัดการสมาชิก
-router.patch('/:id/members/add', addMembers);
-router.patch('/:id/members/remove', removeMembers);
+// redirect or notify that groups endpoints are deprecated
+router.all('*', (req, res) => {
+  res.status(410).json({ message: 'Endpoint /api/groups ถูกย้ายไป /api/projects แล้ว' });
+});
 
 export default router;

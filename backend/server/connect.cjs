@@ -7,7 +7,8 @@ async function main() {
 
     try {
         await client.connect()
-        const collections = await client.db("AppointmentSystem").collections()
+    // เชื่อมต่อกับฐานข้อมูล AppointmentRecord ตามโครงสร้างใหม่
+    const collections = await client.db("AppointmentRecord").collections()
         collections.forEach((collection) => console.log(collection.s.namespace.collection))
     } catch (e) {
         console.error(e)

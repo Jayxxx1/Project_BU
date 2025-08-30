@@ -15,6 +15,9 @@ export default function RegisterPage() {
   const navigate = useNavigate();
   const { register } = useAuth();
 
+  // รหัสนักศึกษา (เฉพาะ role student)
+  const [studentId, setStudentId] = useState('');
+
   const handleSubmit = async (e) => {
   e.preventDefault();
   setError("");
@@ -27,12 +30,13 @@ export default function RegisterPage() {
     return;
   }
   try {
-    await register(username, email, password);
+    await register(username, email, password, studentId);
     setSuccess("ลงทะเบียนสำเร็จ! คุณสามารถเข้าสู่ระบบได้แล้ว");
     setUsername("");
     setEmail("");
     setPassword("");
     setConfirmPassword("");
+    setStudentId('');
     setTimeout(() => navigate("/login"), 2000);
   } catch (err) {
     if (typeof err === "string") setError(err);
@@ -134,6 +138,22 @@ export default function RegisterPage() {
                   >
                     {showPassword ? '👁️' : '👁️‍🗨️'}
                   </button>
+                </div>
+
+                {/* Student ID (เฉพาะนักศึกษา) */}
+                <div>
+                  <label htmlFor="studentId" className="block text-sm font-medium text-gray-700 mb-2">
+                    รหัสนักศึกษา
+                  </label>
+                  <input
+                    id="studentId"
+                    type="text"
+                    placeholder="กรอกรหัสนักศึกษา"
+                    required
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value)}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                  />
                 </div>
               </div>
 

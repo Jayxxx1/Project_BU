@@ -13,7 +13,7 @@ export default function ConfirmAppointmentModal({
   onConfirm,
   formData,
   files,
-  groupInfo,
+  projectInfo,
   members,
   advisor,
   student,
@@ -31,6 +31,10 @@ export default function ConfirmAppointmentModal({
   const studentDisplay = s
     ? `${s.studentId ? `${s.studentId} - ` : ""}${s.fullName || s.username || s.email || "-"}`
     : "-";
+  const id = student && (student.user || student);
+  const studentID = s
+    ? (s.studentId ? `${s.studentId}` : "ไม่พบข้อมูลรหัสนักศึกษา")
+    : "-";
 
   const renderDetails = (label, value) => (
     <div className="flex justify-between items-center py-2 border-b last:border-b-0 border-gray-200">
@@ -45,7 +49,7 @@ export default function ConfirmAppointmentModal({
       <div className="fixed inset-0 flex items-center justify-center z-[9999] p-2 sm:p-6">
         {/* Transparent backdrop that blurs the background */}
         <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose}></div>
-        
+
         <div
           className="relative bg-white rounded-2xl shadow-lg max-w-4xl w-full px-2 py-4 sm:px-16 sm:py-8 z-10 animate-fade-in-up overflow-y-auto"
           style={{ maxHeight: '90vh' }}
@@ -53,7 +57,7 @@ export default function ConfirmAppointmentModal({
           <h2 className="text-3xl font-bold mb-6 text-center text-gray-800">ยืนยันการส่งคำขอ</h2>
           <p className="text-center text-gray-500 mb-6">กรุณาตรวจสอบรายละเอียดทั้งหมดให้ถูกต้องก่อนยืนยันการส่ง</p>
 
-          {/* Advisor & Group Info Section */}
+          {/* Advisor & Project Info Section */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-4 mb-6">
             <div className="flex flex-col">
               <label className="font-semibold text-gray-700 mb-1 text-base md:text-lg">อาจารย์ที่ปรึกษา</label>
@@ -62,9 +66,9 @@ export default function ConfirmAppointmentModal({
               </div>
             </div>
             <div className="flex flex-col">
-              <label className="font-semibold text-gray-700 mb-1 text-base md:text-lg">กลุ่ม</label>
+              <label className="font-semibold text-gray-700 mb-1 text-base md:text-lg">โปรเจค</label>
               <div className="bg-gray-100 p-3 rounded-lg text-base md:text-lg font-medium text-gray-800 border border-gray-200">
-                {groupInfo?.name || "-"}
+                {projectInfo?.name || "-"}
               </div>
             </div>
           </div>
@@ -103,13 +107,20 @@ export default function ConfirmAppointmentModal({
 
           {/* Members List Section */}
           <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-3 text-gray-700">สมาชิกในกลุ่ม</h3>
+            <h3 className="text-xl font-semibold mb-3 text-gray-700">สมาชิกในโปรเจค</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
               {(members || []).length > 0 ? (
                 (members || []).map((mem) => (
-                  <div key={mem._id} className="bg-gray-50 p-3 rounded-lg flex items-center gap-2 border border-gray-200">
-                    <span className="text-gray-500 font-mono text-sm">{mem._id}</span>
-                    <span className="font-medium text-gray-800">{mem.username || mem.email}</span>
+                  <div
+                    key={mem._id}
+                    className="bg-gray-50 p-3 rounded-lg flex items-center gap-2 border border-gray-200"
+                  >
+                    <span className="text-gray-500 font-mono text-sm">
+                      {mem.studentId ? mem.studentId : "ไม่พบข้อมูลรหัสนักศึกษา"}
+                    </span>
+                    <span className="font-medium text-gray-800">
+                      {mem.fullName || mem.username || mem.email}
+                    </span>
                   </div>
                 ))
               ) : (
@@ -162,12 +173,12 @@ export default function ConfirmAppointmentModal({
               {loading ? "กำลังส่ง..." : "ยืนยัน"}
             </button>
           </div>
-          
+
           <div className="text-xs text-red-500 text-center mt-4">
-            หลังจาก “ยืนยัน” ระบบจะส่งคำขอไปยังอาจารย์ที่ปรึกษาประจำกลุ่มของคุณ
+            หลังจาก “ยืนยัน” ระบบจะส่งคำขอไปยังอาจารย์ที่ปรึกษาประจำโปรเจคของคุณ
           </div>
         </div>
-        
+
         <style>{`
           .animate-fade-in-up {
             animation: fade-in-up 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;

@@ -1,6 +1,6 @@
 import Appointment from '../models/Appointment.js';
-import User from '../models/User.js';
-import Group from '../models/Group.js';
+import Project from '../models/Project.js';
+import mongoose from 'mongoose';
 
 function toDateTime(dateStr, timeStr) {
   // เซตเป็น +07:00 ให้เทียบตรงกับเวลาไทย
@@ -16,7 +16,7 @@ export const createAppointment = async (req, res, next) => {
       participants = [],
       participantEmails = [],
       status,
-      relatedGroup,
+      project,
       meetingNotes,
     } = req.body;
 
@@ -35,12 +35,12 @@ export const createAppointment = async (req, res, next) => {
     if (endAt <= startAt) return res.status(400).json({ message: 'เวลาสิ้นสุดต้องหลังเวลาเริ่ม' });
     if (startAt <= now)  return res.status(400).json({ message: 'ไม่สามารถเลือกเวลาอดีตได้' });
 
-    const group = await Group.findById(relatedGroup).select('_id advisor').lean();
-    if (!group) return res.status(400).json({ message: 'กลุ่มไม่ถูกต้อง' });
+    const proj = await Project.findById(project).select('_id advisor').lean();
+    if (!proj) return res.status(400).json({ message: 'โปรเจคไม่ถูกต้อง' });
 
-    // กันเวลาทับซ้อนภายในกลุ่ม
+    // กันเวลาทับซ้อนภายในโปรเจค
     const conflict = await Appointment.exists({
-      relatedGroup,
+      project,
       status: { $ne: 'cancelled' },
       startAt: { $lt: endAt },
       endAt:   { $gt: startAt },
@@ -61,14 +61,14 @@ export const createAppointment = async (req, res, next) => {
       status: status || 'pending',
       participantEmails,
       participants: participantIds,
-      relatedGroup: relatedGroup?.trim() || '',
+      project: project?.trim() || '',
       createBy: req.user.id, 
     });
 
     const populated = await Appointment.findById(doc._id)
       .populate({
-        path: 'relatedGroup',
-        select: 'name groupNumber advisor members',
+        path: 'project',
+        select: 'name advisor members academicYear files',
         populate: [
           { path: 'advisor', select: '_id username email role fullName studentId' },
           { path: 'members', select: '_id username email role fullName studentId' },
@@ -82,51 +82,45 @@ export const createAppointment = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
+
+
 export const getMyAppointments = async (req, res, next) => {
   try {
-    const uid = req.user.id;
+    const userId = req.user.id;
+
+    // ดึง ID โปรเจกต์ทั้งหมดที่ผู้ใช้เป็นสมาชิกหรือเป็นอาจารย์ที่ปรึกษา
+    const myProjectIds = await Project.find({
+      $or: [
+        { members: userId },   // สมาชิกในโปรเจกต์
+        { advisor: userId }    // อาจารย์ที่ปรึกษา
+      ],
+    }).distinct('_id');
+
+    // ค้นหานัดหมาย โดยมีเงื่อนไขเพิ่มเติมว่า project ต้องอยู่ใน myProjectIds ด้วย
     const items = await Appointment.find({
-      $or: [{ createBy: uid }, { participants: uid }],
+      $or: [
+        { createBy: userId },
+        { participants: userId },
+        { project: { $in: myProjectIds } },
+      ],
+      status: { $ne: 'cancelled' },
     })
-      .sort({ startAt: 1 })
-      .populate('createBy', '_id username email role fullName studentId')
-      .populate('participants', '_id username email role fullName studentId')
-      .populate({
-        path: 'relatedGroup',
-        select: 'name groupNumber advisor members',
-        populate: [
-          { path: 'advisor', select: '_id username email role fullName studentId' },
-          { path: 'members', select: '_id username email role fullName studentId' },
-        ],
-      });
+    .sort({ startAt: 1 })
+    .populate('createBy', '_id username email role fullName studentId')
+    .populate('participants', '_id username email role fullName studentId')
+    .populate({
+      path: 'project',
+      select: 'name advisor members academicYear files',
+      populate: [
+        { path: 'advisor', select: '_id username email role fullName studentId' },
+        { path: 'members', select: '_id username email role fullName studentId' },
+      ],
+    });
 
     res.json(items);
-  } catch (e) { next(e); }
-};
-
-export const getAppointmentById = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const doc = await Appointment.findById(id)
-      .populate('createBy', '_id username email role fullName studentId')
-      .populate('participants', '_id username email role fullName studentId')
-      .populate({
-        path: 'relatedGroup',
-        select: 'name groupNumber advisor members',
-        populate: [
-          { path: 'advisor', select: '_id username email role fullName studentId' },
-          { path: 'members', select: '_id username email role fullName studentId' },
-        ],
-      });
-
-    if (!doc) return res.status(404).json({ message: 'Not found' });
-
-    const uid = req.user._id;
-    const authorized = doc.createBy._id.equals(uid) || doc.participants.some(p => p._id.equals(uid));
-    if (!authorized) return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ในการลบกลุ่ม !' });
-
-    res.json(doc);
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 };
 
 export const updateAppointment = async (req, res, next) => {
@@ -152,7 +146,7 @@ export const updateAppointment = async (req, res, next) => {
     // กันทับซ้อน (exclude ตัวเอง)
     const conflict = await Appointment.exists({
       _id: { $ne: id },
-      relatedGroup: up.relatedGroup ?? doc.relatedGroup,
+      project: up.project ?? doc.project,
       status: { $ne: 'cancelled' },
       startAt: { $lt: endAt },
       endAt:   { $gt: startAt },
@@ -173,7 +167,7 @@ export const updateAppointment = async (req, res, next) => {
     doc.participants = Array.isArray(up.participants) ? up.participants : doc.participants;
     doc.participantEmails = Array.isArray(up.participantEmails) ? up.participantEmails : doc.participantEmails;
     if (up.status) doc.status = up.status;
-    if (up.relatedGroup) doc.relatedGroup = up.relatedGroup;
+    if (up.project) doc.project = up.project;
 
     await doc.save();
 
@@ -181,13 +175,14 @@ export const updateAppointment = async (req, res, next) => {
       .populate('createBy', '_id username email role fullName studentId')
       .populate('participants', '_id username email role fullName studentId')
       .populate({
-        path: 'relatedGroup',
-        select: 'name groupNumber advisor members',
+        path: 'project',
+        select: 'name advisor members academicYear files',
         populate: [
           { path: 'advisor', select: '_id username email role fullName studentId' },
           { path: 'members', select: '_id username email role fullName studentId' },
         ],
-      }).lean();
+      })
+      .lean();
 
     res.json(populated);
   } catch (e) { next(e); }
@@ -204,4 +199,47 @@ export const deleteAppointment = async (req, res, next) => {
     await doc.deleteOne();
     res.json({ message: 'Deleted' });
   } catch (e) { next(e); }
+};
+export const getAppointmentById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+
+    // ป้องกันกรณี id ไม่ใช่ ObjectId -> 404
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    const doc = await Appointment.findById(id)
+      .populate('createBy', '_id username email role fullName studentId')
+      .populate('participants', '_id username email role fullName studentId')
+      .populate({
+        path: 'project',
+        select: 'name advisor members academicYear files',
+        populate: [
+          { path: 'advisor', select: '_id username email role fullName studentId' },
+          { path: 'members', select: '_id username email role fullName studentId' },
+        ],
+      });
+
+    if (!doc) return res.status(404).json({ message: 'Appointment not found' });
+
+    // ตรวจสิทธิ์: เจ้าของ/ผู้เข้าร่วม/สมาชิกหรืออาจารย์ในโปรเจคจึงดูได้
+    const uid = req.user?.id?.toString();
+
+    let canSee =
+      doc.createBy?._id?.toString() === uid ||
+      (doc.participants || []).some(p => p?._id?.toString() === uid);
+
+    if (!canSee && doc.project) {
+      const isAdvisor = doc.project.advisor?._id?.toString() === uid;
+      const isMember = (doc.project.members || []).some(m => m?._id?.toString() === uid);
+      canSee = isAdvisor || isMember;
+    }
+
+    if (!canSee) return res.status(403).json({ message: 'Forbidden' });
+
+    return res.json(doc);
+  } catch (e) {
+    next(e);
+  }
 };

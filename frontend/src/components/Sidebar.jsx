@@ -15,7 +15,7 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
     { name: 'นัดหมายของฉัน', path: '/appointments', icon: <AiFillCalendar className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-purple-500 to-pink-500' },
     { name: 'สร้างนัดหมาย', path: '/appointments/create', icon: <AiFillPlusCircle className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-green-500 to-emerald-500' },
     { name: 'สรุปการประชุม', path: '/meetsummary', icon: <MdSummarize className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-orange-500 to-amber-500' },
-    { name: 'กลุ่มของฉัน', path: '/groups', icon: <MdGroup className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-indigo-500 to-purple-500' },
+    { name: 'โปรเจคของฉัน', path: '/projects', icon: <MdGroup className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-indigo-500 to-purple-500' },
     { name: 'เกี่ยวกับ', path: '/about', icon: <IoMdInformationCircleOutline className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-gray-500 to-slate-500' },
   ];
   
