@@ -52,10 +52,11 @@ export default function RegisterPage() {
 
 }
   return (
-    <div className="flex min-h-screen bg-gray-50 items-center justify-center p-4">
-      <div className="flex flex-col lg:flex-row w-full max-w-4xl bg-white rounded-2xl shadow-xl overflow-hidden">
+    <div className="bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center p-4">
+      <div className="w-full max-w-5xl bg-white/40 backdrop-blur-md rounded-3xl shadow-xl overflow-hidden p-0
+            flex flex-col lg:flex-row items-stretch">
         {/* Left side - Image Card (now part of the combined card) */}
-        <div className="hidden lg:flex lg:w-1/2 items-center justify-center p-8 bg-gradient-to-br from-blue-100 to-indigo-200">
+        <div className="w-full lg:w-1/2 flex items-center justify-center p-8 lg:border-l lg:border-white/30">
           <div className="text-center text-gray-700">
             <div className="text-6xl mb-4">📅</div>
             <div className="text-2xl font-semibold">Appointment System</div>
@@ -97,7 +98,7 @@ export default function RegisterPage() {
                   required
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200 transition duration-200 bg-white/60"
                 />
               </div>
 
@@ -112,10 +113,27 @@ export default function RegisterPage() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200 transition duration-200 bg-white/60"
                 />
               </div>
-
+               {/* Student ID (เฉพาะนักศึกษา) */}
+                <div>
+                  <label htmlFor="studentId" className="block text-sm font-medium text-gray-700 mb-2">
+                    รหัสนักศึกษา
+                  </label>
+                  <input
+                    id="studentId"
+                    type="text"
+                    placeholder="กรอกรหัสนักศึกษา"
+                    required
+                    value={studentId}
+                    onChange={(e) => setStudentId(e.target.value.replace(/\D/g, ""))}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200  bg-white/60"
+                    inputMode="numeric"
+                    pattern="^\d{10}$"
+                    maxLength={10}
+                  />
+                </div>
               <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-2">
                   รหัสผ่าน
@@ -128,7 +146,7 @@ export default function RegisterPage() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200 pr-12"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200 pr-12 transition duration-200 bg-white/60"
                   />
                   <button
                     type="button"
@@ -138,22 +156,6 @@ export default function RegisterPage() {
                   >
                     {showPassword ? '👁️' : '👁️‍🗨️'}
                   </button>
-                </div>
-
-                {/* Student ID (เฉพาะนักศึกษา) */}
-                <div>
-                  <label htmlFor="studentId" className="block text-sm font-medium text-gray-700 mb-2">
-                    รหัสนักศึกษา
-                  </label>
-                  <input
-                    id="studentId"
-                    type="text"
-                    placeholder="กรอกรหัสนักศึกษา"
-                    required
-                    value={studentId}
-                    onChange={(e) => setStudentId(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200"
-                  />
                 </div>
               </div>
 
@@ -169,7 +171,7 @@ export default function RegisterPage() {
                     required
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200 pr-12"
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition duration-200 pr-12 transition duration-200 bg-white/60"
                   />
                   <button
                     type="button"

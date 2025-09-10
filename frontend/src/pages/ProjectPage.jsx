@@ -36,7 +36,7 @@ export default function ProjectsPage() {
   const statusGrad = (s) => {
     switch ((s || "active").toLowerCase()) {
       case "archived": return "from-gray-400 to-gray-500";
-      default:         return "from-green-500 to-emerald-500";
+      default: return "from-green-500 to-emerald-500";
     }
   };
 
@@ -152,13 +152,14 @@ export default function ProjectsPage() {
                           นัดหมายกับโปรเจคนี้
                         </Link>
                         <div className="flex items-center gap-2">
-                          <button
-                            onClick={() => alert('หน้าแก้ไขยังไม่เปิดใช้งาน')}
-                            className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition"
-                            title="แก้ไข"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </button>
+                          <Link to={`/projects/details/${p._id}`}>
+                            <button
+                              className="p-2 rounded-lg bg-gray-100 hover:bg-gray-200 transition"
+                              title="แก้ไข"  
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                          </Link>
                           <button
                             onClick={() => handleDelete(p._id)}
                             className="p-2 rounded-lg bg-gray-100 hover:bg-red-100 text-red-600 transition"

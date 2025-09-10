@@ -1,4 +1,5 @@
 import axios from 'axios';
+
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function getToken() {
@@ -6,20 +7,22 @@ function getToken() {
     localStorage.getItem('token') ||
     localStorage.getItem('authToken') ||
     localStorage.getItem('accessToken');
-  if (direct) return direct;
+  if (direct) return String(direct).replace(/^"|"$/g, '');
   try {
     const maybe =
       JSON.parse(localStorage.getItem('user') || '{}') ||
       JSON.parse(localStorage.getItem('userInfo') || '{}');
-    return maybe?.token || maybe?.accessToken || maybe?.jwt || null;
-  } catch { return null; }
+    return (maybe?.token || maybe?.accessToken || maybe?.jwt || '').replace(/^"|"$/g, '');
+  } catch {
+    return '';
+  }
 }
 
 const client = axios.create({ baseURL: API_URL });
 client.interceptors.request.use((config) => {
   const t = getToken();
-  if (!config.headers) config.headers = {};
-  if (t) config.headers.Authorization = `Bearer ${String(t).replace(/^"|"$/g, '')}`;
+  config.headers = config.headers || {};
+  if (t) config.headers.Authorization = `Bearer ${t}`;
   return config;
 });
 
@@ -28,29 +31,26 @@ export const appointmentService = {
     const r = await client.post('/api/appointments', data);
     return r.data;
   },
-
+  // “ของฉัน”
   async list(params = {}) {
     const r = await client.get('/api/appointments', { params });
     return r.data;
   },
-
-  // เรียก /api/appointments/:id เท่านั้น (ตัด fallback /detail)
+  //  “ทั้งหมด” 
+  async listAll(params = {}) {
+    const r = await client.get('/api/appointments/all', { params });
+    return r.data;
+  },
   async get(id) {
-    if (!id) throw new Error('Invalid appointment id');
-    const safeId = encodeURIComponent(String(id));
-    const r = await client.get(`/api/appointments/${safeId}`);
+    const r = await client.get(`/api/appointments/${encodeURIComponent(String(id))}`);
     return r.data;
   },
-
   async update(id, data) {
-    const safeId = encodeURIComponent(String(id));
-    const r = await client.patch(`/api/appointments/${safeId}`, data);
+    const r = await client.patch(`/api/appointments/${encodeURIComponent(String(id))}`, data);
     return r.data;
   },
-
   async remove(id) {
-    const safeId = encodeURIComponent(String(id));
-    const r = await client.delete(`/api/appointments/${safeId}`);
+    const r = await client.delete(`/api/appointments/${encodeURIComponent(String(id))}`);
     return r.data;
   },
 };

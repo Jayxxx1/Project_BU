@@ -3,6 +3,7 @@ import { protect } from "../middleware/authMiddleware.js";
 import {
   createAppointment,
   getMyAppointments,
+  getAllAppointments,    
   getAppointmentById,
   updateAppointment,
   deleteAppointment,
@@ -10,12 +11,16 @@ import {
 
 const router = express.Router();
 
+// ต้องล็อกอินก่อน (ไม่จำกัด role)
 router.use(protect);
+
+//  (หน้าแรกต้องการ)
+router.get("/all", getAllAppointments);
 
 // รายการของฉัน
 router.get("/", getMyAppointments);
 
-// ✅ มาตรฐาน REST: รายการเดียวใช้ /:id (ลบ/เลิกใช้ /detail/:id)
+// รายการเดี่ยว (detail)
 router.get("/:id", getAppointmentById);
 
 // สร้าง/แก้ไข/ลบ

@@ -38,7 +38,7 @@ export default function LoginPage() {
     <div className="bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat min-h-screen flex items-center justify-center p-4">
       {/* นี่คือ Card Login หลักที่ขยายเต็มพื้นที่ */}
       <div className="w-full max-w-lg bg-white/40 backdrop-blur-md rounded-3xl shadow-xl overflow-hidden p-8 flex items-center justify-center">
-        {/* Right side - Login Form (แต่ตอนนี้ไม่มีฝั่งซ้ายแล้ว) */}
+        {/* Right side - Login Form */}
         <div className="w-full max-w-md space-y-8">
           {/* Header */}
           <div className="text-center">

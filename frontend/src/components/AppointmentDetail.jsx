@@ -163,6 +163,27 @@ export default function AppointmentDetail() {
     }
   };
 
+  // กำหนดรายชื่อผู้เข้าร่วม (สมาชิกโปรเจคและอาจารย์ประจำกลุ่ม)
+  const attendees = React.useMemo(() => {
+    if (!appointment || !appointment.project) return [];
+    const list = [];
+    // เพิ่มสมาชิกในโปรเจค
+    if (Array.isArray(appointment.project.members)) {
+      list.push(...appointment.project.members);
+    }
+    // เพิ่มอาจารย์ที่ปรึกษา
+    if (appointment.project.advisor) {
+      list.push(appointment.project.advisor);
+    }
+    // กำจัดตัวซ้ำตาม _id
+    const map = new Map();
+    for (const u of list) {
+      if (!u || !u._id) continue;
+      if (!map.has(u._id)) map.set(u._id, u);
+    }
+    return Array.from(map.values());
+  }, [appointment]);
+
   if (loading) {
     return (
       <div className="bg-[url(./bg/bg.webp)] bg-cover bg-center bg-no-repeat min-h-screen">
@@ -317,20 +338,30 @@ export default function AppointmentDetail() {
             <div className="bg-white/95 backdrop-blur-xl rounded-2xl shadow-xl border border-gray-200/50 p-6">
               <h3 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
                 <MdPerson className="text-pink-500 mr-3" />
-                ผู้เข้าร่วม ({appointment.participants?.length || 0} คน)
+                ผู้เข้าร่วม ({attendees.length} คน)
               </h3>
               <div className="space-y-2">
-                {appointment.participants && appointment.participants.length > 0 ? (
-                  appointment.participants.map((p, index) => (
-                    <div key={p._id} className="flex items-center p-3 bg-gray-50/80 rounded-lg">
-                      <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
-                        {(p.fullName || p.username || p.email || "U").charAt(0).toUpperCase()}
+                {attendees.length > 0 ? (
+                  attendees.map((u) => {
+                    const initial = (u.fullName || u.username || u.email || 'U').charAt(0).toUpperCase();
+                    let displayName = '';
+                    if (u.role === 'student') {
+                      const sid = u.studentId ? `${u.studentId} ` : '';
+                      displayName = `${sid}${u.fullName || u.username || u.email} (นักศึกษา)`;
+                    } else if (u.role === 'teacher') {
+                      displayName = `${u.fullName || u.username || u.email} (อาจารย์)`;
+                    } else {
+                      displayName = u.fullName || u.username || u.email;
+                    }
+                    return (
+                      <div key={u._id} className="flex items-center p-3 bg-gray-50/80 rounded-lg">
+                        <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center text-white font-bold mr-3">
+                          {initial}
+                        </div>
+                        <span className="text-gray-700 font-medium">{displayName}</span>
                       </div>
-                      <span className="text-gray-700 font-medium">
-                        {p.fullName || p.username || p.email}
-                      </span>
-                    </div>
-                  ))
+                    );
+                  })
                 ) : (
                   <p className="text-gray-500 italic">ไม่มีผู้เข้าร่วม</p>
                 )}

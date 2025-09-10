@@ -1,7 +1,7 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
 import Layout from "./components/Layout";
-import MainContent from "./components/MainContent";
+import MainContent from "./components/MainContent.jsx";
 import LoginPage from "./pages/LoginPage";
 import RegisterPage from "./pages/RegisterPage";
 import AppointmentsPages from "./pages/AppointmentsPages.jsx";

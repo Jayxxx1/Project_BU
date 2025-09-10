@@ -5,12 +5,7 @@ import { projectService } from "../services/projectService";
 import FeedbackModal from "../components/FeedbackModal.jsx";
 import { Users, GraduationCap, PlusCircle } from "lucide-react";
 
-/**
- * Form page for creating a new project. This component reuses the
- * previous group creation form but targets the Project entity instead.
- * A project must have a name, advisor (teacher) and academic year. Students
- * can only create one project per academic year; teachers can create multiple.
- */
+
 export default function CreateProject() {
   const navigate = useNavigate();
   const [selectedMembers, setSelectedMembers] = useState([]);

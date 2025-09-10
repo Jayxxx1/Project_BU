@@ -5,7 +5,7 @@ import axios from "axios";
 import ConfirmAppointmentModal from "../components/ConfirmAppointmentModal.jsx";
 import FeedbackModal from "../components/FeedbackModal.jsx";
 import { projectService } from "../services/projectService.js";
-import { Calendar, Clock, MapPin, FileText } from "lucide-react";
+import { Calendar, Clock, MapPin, FileText, User, AlertCircle, CheckCircle, Users, Globe } from "lucide-react";
 
 export default function CreateAppointment() {
   // ดึง user เพื่อส่งให้ Modal แสดง StudentID - Fullname
@@ -37,6 +37,17 @@ export default function CreateAppointment() {
   const [showPreview, setShowPreview] = useState(false);
   const [showFeedback, setShowFeedback] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState("");
+
+  // Step management for wizard
+  const [currentStep, setCurrentStep] = useState(1);
+  const [stepErrors, setStepErrors] = useState({});
+
+  const steps = [
+    { id: 1, title: "โปรเจกต์", icon: FileText },
+    { id: 2, title: "รายละเอียด", icon: FileText },
+    { id: 3, title: "เวลาและสถานที่", icon: Calendar },
+    { id: 4, title: "สรุป", icon: CheckCircle }
+  ];
 
   useEffect(() => {
     let alive = true;
@@ -76,6 +87,10 @@ export default function CreateAppointment() {
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (stepErrors[name]) {
+      setStepErrors(prev => ({ ...prev, [name]: "" }));
+    }
   };
 
   const handleFileChange = (e) => {
@@ -98,6 +113,37 @@ export default function CreateAppointment() {
       return "กรุณากรอกสถานที่จัดประชุม";
     }
     return "";
+  };
+
+  const validateStep = (step) => {
+    const newErrors = {};
+    
+    if (step === 1) {
+      if (!formData.project) newErrors.project = "กรุณาเลือกโปรเจกต์";
+    }
+    
+    if (step === 2) {
+      if (!formData.title.trim()) newErrors.title = "กรุณากรอกหัวข้อการนัดหมาย";
+    }
+    
+    if (step === 3) {
+      if (!formData.date) newErrors.date = "กรุณาเลือกวันที่";
+      if (!formData.startTime) newErrors.startTime = "กรุณาเลือกเวลาเริ่มต้น";
+      if (!formData.endTime) newErrors.endTime = "กรุณาเลือกเวลาสิ้นสุด";
+      
+      if (formData.startTime && formData.endTime) {
+        const start = new Date(`${formData.date}T${formData.startTime}`);
+        const end = new Date(`${formData.date}T${formData.endTime}`);
+        if (end <= start) newErrors.endTime = "เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น";
+      }
+      
+      if (formData.meetingType === "offline" && !formData.location.trim()) {
+        newErrors.location = "กรุณากรอกสถานที่";
+      }
+    }
+    
+    setStepErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const showPopupError = (message) => {
@@ -164,254 +210,535 @@ export default function CreateAppointment() {
     }
   };
 
+  const nextStep = () => {
+    if (validateStep(currentStep)) {
+      setCurrentStep(prev => Math.min(prev + 1, 4));
+    }
+  };
+
+  const prevStep = () => {
+    setCurrentStep(prev => Math.max(prev - 1, 1));
+  };
+
   const selectedProject = projects.find((p) => p._id === formData.project) || null;
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-[url('/bg/bg.webp')] bg-cover bg-center bg-no-repeat relative overflow-hidden">
-      {/* Background blur overlay */}
-      <div className="absolute inset-0 bg-white/70 backdrop-blur-xs"></div>
-      <div className="relative z-10 max-w-5xl w-full mx-auto px-2 sm:px-8 py-8">
-        {/* Header */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-t-2xl px-8 py-6 mb-0 shadow-xl">
-          <h2 className="text-2xl font-medium">สร้างนัดหมายใหม่</h2>
+
+  const renderStepIndicator = () => (
+    <div className="mb-6 md:mb-8">
+      <div className="flex items-center justify-center space-x-1 md:space-x-4 overflow-x-auto pb-2">
+        {steps.map((step, index) => {
+          const isActive = currentStep === step.id;
+          const isCompleted = currentStep > step.id;
+          const Icon = step.icon;
+          
+          return (
+            <div key={step.id} className="flex items-center">
+              <div className="flex flex-col items-center min-w-0 flex-shrink-0">
+                <div className={`
+                  w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200
+                  ${isActive ? 'bg-blue-500 text-white shadow-lg scale-110' : 
+                    isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}
+                `}>
+                  <Icon className="w-5 h-5 md:w-6 md:h-6" />
+                </div>
+                <span className={`
+                  mt-1 text-xs md:text-sm font-medium text-center whitespace-nowrap
+                  ${isActive ? 'text-blue-600' : isCompleted ? 'text-green-600' : 'text-gray-500'}
+                `}>
+                  {step.title}
+                </span>
+              </div>
+              {index < steps.length - 1 && (
+                <div className={`
+                  w-8 md:w-12 h-0.5 mx-2 transition-colors duration-200
+                  ${isCompleted ? 'bg-green-500' : 'bg-gray-200'}
+                `} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+
+  const renderStep1 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">เลือกโปรเจกต์ของคุณ</h3>
+        <p className="text-gray-600">เลือกโปรเจกต์ที่คุณต้องการสร้างนัดหมาย</p>
+      </div>
+
+      <div className="grid gap-4">
+        {projects.map(project => (
+          <div 
+            key={project._id}
+            onClick={() => handleChange({ target: { name: 'project', value: project._id } })}
+            className={`
+              p-4 md:p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md
+              ${formData.project === project._id 
+                ? 'border-blue-500 bg-blue-50 shadow-lg' 
+                : 'border-gray-200 hover:border-gray-300'}
+            `}
+          >
+            <div className="flex items-start space-x-4">
+              <div className={`
+                w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0
+                ${formData.project === project._id ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}
+              `}>
+                <FileText className="w-6 h-6" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h4 className="font-semibold text-gray-800 mb-1">{project.name}</h4>
+                <div className="flex items-center text-sm text-gray-600 mb-2">
+                  <User className="w-4 h-4 mr-1" />
+                  <span>{project.advisor?.fullName || project.advisor?.username || project.advisor?.email}</span>
+                </div>
+                <p className="text-sm text-gray-500">{project.advisor?.email}</p>
+              </div>
+              {formData.project === project._id && (
+                <CheckCircle className="w-6 h-6 text-blue-500 flex-shrink-0" />
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {stepErrors.project && (
+        <div className="flex items-center space-x-2 text-red-600 bg-red-50 p-3 rounded-lg">
+          <AlertCircle className="w-5 h-5 flex-shrink-0" />
+          <span className="text-sm">{stepErrors.project}</span>
+        </div>
+      )}
+    </div>
+  );
+
+  const renderStep2 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">รายละเอียดการนัดหมาย</h3>
+        <p className="text-gray-600">กรอกข้อมูลเกี่ยวกับการนัดหมายของคุณ</p>
+      </div>
+
+      <div className="space-y-4">
+        <div>
+          <label className="flex items-center space-x-2 text-base font-semibold text-gray-700 mb-2">
+            <FileText className="w-5 h-5 text-gray-500" />
+            <span>หัวข้อการนัดหมาย *</span>
+          </label>
+          <input
+            type="text"
+            name="title"
+            value={formData.title}
+            onChange={handleChange}
+            placeholder="เช่น ประชุมเพื่อนำเสนอความคืบหน้าโครงงาน"
+            className={`
+              w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors duration-200
+              ${stepErrors.title ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}
+            `}
+          />
+          {stepErrors.title && (
+            <div className="flex items-center space-x-2 text-red-600 mt-2">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">{stepErrors.title}</span>
+            </div>
+          )}
         </div>
 
-        <form onSubmit={handlePreview} className="bg-white rounded-b-2xl shadow-xl px-8 py-7 space-y-6">
-          {/* Error message (เผื่อไว้) */}
-          {error && (
-            <div className="text-red-600 text-sm bg-red-50 border border-red-200 rounded-md p-3">
-              {error}
+        <div>
+          <label className="block text-base font-semibold text-gray-700 mb-2">รายละเอียดเพิ่มเติม</label>
+          <textarea
+            name="description"
+            value={formData.description}
+            onChange={handleChange}
+            placeholder="อธิบายรายละเอียดเพิ่มเติมเกี่ยวกับการนัดหมาย..."
+            rows="4"
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors duration-200 resize-none"
+          />
+        </div>
+
+        <div>
+          <label className="block text-base font-semibold text-gray-700 mb-2">บันทึกเพิ่มเติม</label>
+          <textarea
+            name="note"
+            value={formData.note}
+            onChange={handleChange}
+            placeholder="ข้อความถึงอาจารย์ที่ปรึกษา..."
+            rows="3"
+            className="w-full px-4 py-3 border-2 border-gray-300 rounded-xl focus:outline-none focus:border-blue-500 transition-colors duration-200 resize-none"
+          />
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderStep3 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">เวลาและสถานที่</h3>
+        <p className="text-gray-600">กำหนดเวลาและเลือกรูปแบบการประชุม</p>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label className="flex items-center space-x-2 text-base font-semibold text-gray-700 mb-2">
+            <Calendar className="w-5 h-5 text-gray-500" />
+            <span>วันที่ *</span>
+          </label>
+          <input
+            type="date"
+            name="date"
+            value={formData.date}
+            onChange={handleChange}
+            min={new Date().toISOString().split('T')[0]}
+            className={`
+              w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors duration-200
+              ${stepErrors.date ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}
+            `}
+          />
+          {stepErrors.date && (
+            <div className="flex items-center space-x-2 text-red-600 mt-1">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">{stepErrors.date}</span>
             </div>
           )}
+        </div>
 
-          {/* Project Select */}
-          <div>
-            <label className="block font-semibold mb-3 text-gray-700 text-base md:text-lg">โปรเจคของคุณ</label>
-            <select
-              name="project"
-              value={formData.project}
-              onChange={handleChange}
-              required
-              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-            >
-              <option value="">เลือกโปรเจค</option>
-              {projects.map((p) => (
-                <option key={p._id} value={p._id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
+        <div>
+          <label className="flex items-center space-x-2 text-base font-semibold text-gray-700 mb-2">
+            <Clock className="w-5 h-5 text-gray-500" />
+            <span>เวลาเริ่มต้น *</span>
+          </label>
+          <input
+            type="time"
+            name="startTime"
+            value={formData.startTime}
+            onChange={handleChange}
+            className={`
+              w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors duration-200
+              ${stepErrors.startTime ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}
+            `}
+          />
+          {stepErrors.startTime && (
+            <div className="flex items-center space-x-2 text-red-600 mt-1">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">{stepErrors.startTime}</span>
+            </div>
+          )}
+        </div>
+
+        <div>
+          <label className="flex items-center space-x-2 text-base font-semibold text-gray-700 mb-2">
+            <Clock className="w-5 h-5 text-gray-500" />
+            <span>เวลาสิ้นสุด *</span>
+          </label>
+          <input
+            type="time"
+            name="endTime"
+            value={formData.endTime}
+            onChange={handleChange}
+            className={`
+              w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors duration-200
+              ${stepErrors.endTime ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}
+            `}
+          />
+          {stepErrors.endTime && (
+            <div className="flex items-center space-x-2 text-red-600 mt-1">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">{stepErrors.endTime}</span>
+            </div>
+          )}
+        </div>
+      </div>
+
+      <div className="space-y-4">
+        <label className="block text-base font-semibold text-gray-700">รูปแบบการประชุม *</label>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div 
+            onClick={() => handleChange({ target: { name: 'meetingType', value: 'offline' } })}
+            className={`
+              p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md
+              ${formData.meetingType === 'offline' 
+                ? 'border-blue-500 bg-blue-50 shadow-lg' 
+                : 'border-gray-200 hover:border-gray-300'}
+            `}
+          >
+            <div className="flex items-center space-x-3">
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center
+                ${formData.meetingType === 'offline' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}
+              `}>
+                <MapPin className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-800">ออฟไลน์</h4>
+                <p className="text-sm text-gray-600">ประชุมในห้อง</p>
+              </div>
+              {formData.meetingType === 'offline' && (
+                <CheckCircle className="w-6 h-6 text-blue-500 ml-auto" />
+              )}
+            </div>
           </div>
 
-          {/* Advisor Info */}
-          {selectedAdvisor && (
-            <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-1">
-              <p className="font-medium text-gray-800">อาจารย์ที่ปรึกษา: {selectedAdvisor.name}</p>
-              <p className="text-sm text-gray-600">{selectedAdvisor.email}</p>
+          <div 
+            onClick={() => handleChange({ target: { name: 'meetingType', value: 'online' } })}
+            className={`
+              p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md
+              ${formData.meetingType === 'online' 
+                ? 'border-blue-500 bg-blue-50 shadow-lg' 
+                : 'border-gray-200 hover:border-gray-300'}
+            `}
+          >
+            <div className="flex items-center space-x-3">
+              <div className={`
+                w-10 h-10 rounded-full flex items-center justify-center
+                ${formData.meetingType === 'online' ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-600'}
+              `}>
+                <Users className="w-5 h-5" />
+              </div>
+              <div>
+                <h4 className="font-semibold text-gray-800">ออนไลน์</h4>
+                <p className="text-sm text-gray-600">Teams, Meet, Zoom</p>
+              </div>
+              {formData.meetingType === 'online' && (
+                <CheckCircle className="w-6 h-6 text-blue-500 ml-auto" />
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <label className="flex items-center space-x-2 text-base font-semibold text-gray-700 mb-2">
+            <MapPin className="w-5 h-5 text-gray-500" />
+            <span>
+              {formData.meetingType === 'offline' ? 'สถานที่ *' : 'ลิงก์การประชุม'}
+            </span>
+          </label>
+          <input
+            type="text"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            placeholder={formData.meetingType === 'offline' 
+              ? "เช่น อาคารเรียนรวม 1 ห้อง 201" 
+              : "เช่น https://teams.microsoft.com/meeting/..."
+            }
+            className={`
+              w-full px-4 py-3 border-2 rounded-xl focus:outline-none transition-colors duration-200
+              ${stepErrors.location ? 'border-red-300 focus:border-red-500' : 'border-gray-300 focus:border-blue-500'}
+            `}
+          />
+          {stepErrors.location && (
+            <div className="flex items-center space-x-2 text-red-600 mt-2">
+              <AlertCircle className="w-4 h-4" />
+              <span className="text-sm">{stepErrors.location}</span>
             </div>
           )}
+        </div>
 
-          {/* Project Title */}
-          {selectedProjectTitle && (
-            <div className="bg-gray-50 border border-gray-200 rounded-xl p-4 mb-1">
-              <p className="font-medium text-gray-800">ชื่อโปรเจกต์: {selectedProjectTitle}</p>
-            </div>
-          )}
-
-          {/* Title */}
-          <div>
-            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
-              <FileText className="w-4 h-4 mr-2 text-gray-500" />
-              หัวข้อ
-            </label>
+        <div className="border-t pt-4">
+          <div className="flex items-center space-x-3 mb-3">
             <input
-              name="title"
-              value={formData.title}
-              onChange={handleChange}
-              placeholder="หัวข้อการนัดหมาย เช่น การประชุมเพื่อนำเสนอความคืบหน้าโครงงาน"
-              required
-              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
+              type="checkbox"
+              id="attachFiles"
+              checked={attachEnabled}
+              onChange={(e) => setAttachEnabled(e.target.checked)}
+              className="w-5 h-5 text-blue-600 rounded focus:ring-blue-500"
             />
-          </div>
-
-          {/* Description */}
-          <div>
-            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2">
-              รายละเอียด
+            <label htmlFor="attachFiles" className="text-base font-semibold text-gray-700">
+              แนบไฟล์เอกสาร
             </label>
-            <textarea
-              name="description"
-              value={formData.description}
-              onChange={handleChange}
-              placeholder="รายละเอียดเพิ่มเติมเกี่ยวกับการนัดหมาย"
-              rows="3"
-              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-            />
           </div>
+          
+          {attachEnabled && (
+            <div className="bg-gray-50 p-4 rounded-xl">
+              <input
+                type="file"
+                multiple
+                onChange={handleFileChange}
+                className="w-full text-sm text-gray-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200"
+              />
+              {files.length > 0 && (
+                <div className="mt-3 text-sm text-gray-600">
+                  เลือกไฟล์แล้ว: {files.length} ไฟล์
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
-          {/* Date and Time */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
-                <Calendar className="w-4 h-4 mr-2 text-gray-500" />
-                วันที่
-              </label>
-              <input
-                type="date"
-                name="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-                className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-              />
-            </div>
-            <div>
-              <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
-                <Clock className="w-4 h-4 mr-2 text-gray-500" />
-                เวลาเริ่มต้น
-              </label>
-              <input
-                type="time"
-                name="startTime"
-                value={formData.startTime}
-                onChange={handleChange}
-                required
-                className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-              />
-            </div>
-            <div>
-              <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2 flex items-center">
-                <Clock className="w-4 h-4 mr-2 text-gray-500" />
-                เวลาสิ้นสุด
-              </label>
-              <input
-                type="time"
-                name="endTime"
-                value={formData.endTime}
-                onChange={handleChange}
-                required
-                className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-              />
-            </div>
-          </div>
+  const renderStep4 = () => (
+    <div className="space-y-6">
+      <div className="text-center mb-6">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-2">ตรวจสอบข้อมูล</h3>
+        <p className="text-gray-600">กรุณาตรวจสอบข้อมูลก่อนยืนยันการสร้างนัดหมาย</p>
+      </div>
 
-          {/* Meeting Type and Location */}
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl p-6 space-y-4">
+        <div className="flex items-start space-x-3">
+          <FileText className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
           <div>
-            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2">
-              ช่องทางการประชุม
-            </label>
-            <div className="flex items-center space-x-6">
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  name="meetingType"
-                  value="offline"
-                  checked={formData.meetingType === "offline"}
-                  onChange={handleChange}
-                  className="form-radio text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-gray-700">ออฟไลน์ (ในห้อง)</span>
-              </label>
-              <label className="inline-flex items-center">
-                <input
-                  type="radio"
-                  name="meetingType"
-                  value="online"
-                  checked={formData.meetingType === "online"}
-                  onChange={handleChange}
-                  className="form-radio text-blue-600 focus:ring-blue-500"
-                />
-                <span className="ml-2 text-gray-700">ออนไลน์ (Microsoft Teams, Google Meet)</span>
-              </label>
-            </div>
+            <h4 className="font-semibold text-gray-800">โปรเจกต์</h4>
+            <p className="text-gray-600">{selectedProjectTitle}</p>
+            <p className="text-sm text-gray-500">อาจารย์ที่ปรึกษา: {selectedAdvisor?.name}</p>
+          </div>
+        </div>
 
-            {formData.meetingType === "offline" && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <MapPin className="w-4 h-4 mr-2 text-gray-500" />
-                  สถานที่
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="เช่น อาคารเรียนรวม 1 ห้อง 201"
-                  className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                />
-              </div>
-            )}
-
-            {formData.meetingType === "online" && (
-              <div className="mt-4">
-                <label className="block text-sm font-medium text-gray-700 mb-1 flex items-center">
-                  <MapPin className="w-4 h-4 mr-2 text-gray-500" />
-                  ลิงก์การประชุม
-                </label>
-                <input
-                  type="text"
-                  name="location"
-                  value={formData.location}
-                  onChange={handleChange}
-                  placeholder="เช่น https://teams.microsoft.com/meeting/..."
-                  className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-                />
-              </div>
+        <div className="flex items-start space-x-3">
+          <FileText className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+          <div>
+            <h4 className="font-semibold text-gray-800">หัวข้อ</h4>
+            <p className="text-gray-600">{formData.title}</p>
+            {formData.description && (
+              <p className="text-sm text-gray-500 mt-1">{formData.description}</p>
             )}
           </div>
+        </div>
 
-          {/* Note */}
+        <div className="flex items-start space-x-3">
+          <Calendar className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
           <div>
-            <label className="block text-base md:text-lg font-semibold text-gray-700 mb-2">
-              บันทึกเพิ่มเติม
-            </label>
-            <textarea
-              name="note"
-              value={formData.note}
-              onChange={handleChange}
-              placeholder="ข้อความถึงอาจารย์ที่ปรึกษา"
-              rows="3"
-              className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"
-            />
+            <h4 className="font-semibold text-gray-800">วันที่และเวลา</h4>
+            <p className="text-gray-600">
+              {formData.date && new Date(formData.date).toLocaleDateString('th-TH', {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+              })}
+            </p>
+            <p className="text-sm text-gray-500">
+              {formData.startTime} - {formData.endTime}
+            </p>
           </div>
+        </div>
 
-          {/* File Attachment */}
-          <div className="mt-6">
-            <div className="flex items-center mb-2">
-              <input
-                type="checkbox"
-                id="attachFiles"
-                checked={attachEnabled}
-                onChange={() => setAttachEnabled(!attachEnabled)}
-                className="form-checkbox text-blue-600 h-5 w-5 rounded focus:ring-blue-500"
-              />
-              <label htmlFor="attachFiles" className="ml-2 text-base md:text-lg font-semibold text-gray-700">
-                แนบไฟล์ (เอกสาร, รูปภาพ, ฯลฯ)
-              </label>
+        <div className="flex items-start space-x-3">
+          <MapPin className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+          <div>
+            <h4 className="font-semibold text-gray-800">
+              {formData.meetingType === 'offline' ? 'สถานที่' : 'ลิงก์การประชุม'}
+            </h4>
+            <p className="text-gray-600">{formData.location}</p>
+            <p className="text-sm text-gray-500">
+              รูปแบบ: {formData.meetingType === 'offline' ? 'ออฟไลน์' : 'ออนไลน์'}
+            </p>
+          </div>
+        </div>
+
+        {formData.note && (
+          <div className="flex items-start space-x-3">
+            <FileText className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+            <div>
+              <h4 className="font-semibold text-gray-800">บันทึกเพิ่มเติม</h4>
+              <p className="text-gray-600">{formData.note}</p>
             </div>
-            {attachEnabled && (
-              <div className="mt-2">
-                <input
-                  type="file"
-                  multiple
-                  onChange={handleFileChange}
-                  className="w-full text-gray-700 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-                />
-                <p className="mt-2 text-xs text-gray-500">ไฟล์ที่เลือก: {files.length} ไฟล์</p>
-              </div>
-            )}
+          </div>
+        )}
+
+        {files.length > 0 && (
+          <div className="flex items-start space-x-3">
+            <FileText className="w-6 h-6 text-blue-600 flex-shrink-0 mt-1" />
+            <div>
+              <h4 className="font-semibold text-gray-800">ไฟล์แนบ</h4>
+              <p className="text-gray-600">{files.length} ไฟล์</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+
+  const renderStepContent = () => {
+    switch (currentStep) {
+      case 1: return renderStep1();
+      case 2: return renderStep2();
+      case 3: return renderStep3();
+      case 4: return renderStep4();
+      default: return renderStep1();
+    }
+  };
+
+  const handleSubmit = async () => {
+    setCurrentStep(4);
+    // Show preview modal after reaching step 4
+    setTimeout(() => {
+      handlePreview({ preventDefault: () => {} });
+    }, 100);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+      <div className="container mx-auto px-4 py-6 md:py-8 max-w-4xl">
+        {/* Header */}
+        <div className="text-center mb-6 md:mb-8">
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
+            สร้างนัดหมายใหม่
+          </h1>
+          <p className="text-gray-600">จัดการนัดหมายกับอาจารย์ที่ปรึกษาได้อย่างง่ายดาย</p>
+        </div>
+
+        {/* Progress Indicator */}
+        {renderStepIndicator()}
+
+        {/* Main Content */}
+        <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
+          <div className="p-6 md:p-8">
+            {renderStepContent()}
           </div>
 
-          {/* Submit Button */}
-          <div className="mt-6">
+          {/* Navigation Buttons */}
+          <div className="bg-gray-50 px-6 md:px-8 py-4 flex justify-between items-center">
             <button
-              type="submit"
-              className="w-full py-4 px-6 rounded-xl text-lg font-bold text-white bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-500/50"
+              onClick={prevStep}
+              disabled={currentStep === 1}
+              className={`
+                px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium transition-all duration-200
+                ${currentStep === 1 
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'}
+              `}
             >
-              สร้างนัดหมาย
+              ← ก่อนหน้า
             </button>
-          </div>
-        </form>
 
+            {currentStep < 4 ? (
+              <button
+                onClick={nextStep}
+                className="px-4 md:px-6 py-2 md:py-3 bg-blue-500 hover:bg-blue-600 text-white font-medium rounded-xl transition-all duration-200 active:scale-95"
+              >
+                ถัดไป →
+              </button>
+            ) : (
+              <button
+                onClick={handleSubmit}
+                disabled={loading}
+                className={`
+                  px-6 md:px-8 py-3 font-bold rounded-xl transition-all duration-200 flex items-center space-x-2
+                  ${loading 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 active:scale-95'}
+                  text-white
+                `}
+              >
+                {loading ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <span>กำลังสร้าง...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-5 h-5" />
+                    <span>ยืนยันสร้างนัดหมาย</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Your original modals - keeping ALL your logic */}
         <ConfirmAppointmentModal
           open={showPreview}
           onClose={() => setShowPreview(false)}
@@ -421,12 +748,11 @@ export default function CreateAppointment() {
           projectInfo={selectedProject}
           members={members}
           advisor={selectedAdvisor}
-          student={(user?.user || user) ?? null}  // << ส่งผู้ใช้ปัจจุบันเข้า modal
+          student={(user?.user || user) ?? null}
           loading={loading}
           projectTitle={selectedProjectTitle}
         />
 
-        {/* Feedback Modal สำหรับแจ้งเตือนแบบป๊อปอัพ */}
         <FeedbackModal
           open={showFeedback}
           message={feedbackMsg}
