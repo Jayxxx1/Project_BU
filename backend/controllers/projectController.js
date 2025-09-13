@@ -1,0 +1,317 @@
+import mongoose from 'mongoose';
+import Project from '../models/Project.js';
+import User from '../models/User.js';
+
+// Helper: check if user is teacher
+const isTeacher = async (id) => {
+  const u = await User.findById(id).select('_id role');
+  return !!u && u.role === 'teacher';
+};
+
+// Helper: check if user is student
+const isStudent = async (id) => {
+  const u = await User.findById(id).select('_id role');
+  return !!u && u.role === 'student';
+};
+
+// Helper: convert to string id
+const toStrId = (v) => (typeof v === 'string' ? v : v?.toString());
+
+// สร้างโปรเจคใหม่ (เฉพาะ teacher หรือ admin)
+export const createProject = async (req, res, next) => {
+  /*
+   * สร้างโปรเจคใหม่
+   * ผู้ใช้ทุกบทบาท (student, teacher, admin) สามารถสร้างโปรเจคได้
+   * ต้องระบุ: name, advisorId, academicYear
+   * ตรวจสอบว่า ผู้สร้างยังไม่มีโปรเจคในปีการศึกษานั้นมาก่อน
+   * ตรวจสอบว่า advisor เป็น teacher
+   * ตรวจสอบว่า memberIds ทั้งหมดเป็น student และยังไม่ได้อยู่ในโปรเจคปีการศึกษานี้
+   */
+  try {
+    const {
+      // projectNumber ถูกยกเลิก ไม่ต้องรับจากฟอร์มอีกต่อไป
+      name,
+      description = '',
+      advisorId,
+      memberIds = [],
+      academicYear,
+      files = [],
+    } = req.body;
+
+    // Validate basic fields
+    if (!name || !advisorId || !academicYear) {
+      return res.status(400).json({ message: 'กรอกชื่อโปรเจค เลือกอาจารย์ และปีการศึกษาให้ครบถ้วน' });
+    }
+
+    // Validate advisor is teacher
+    if (!(await isTeacher(advisorId))) {
+      return res.status(400).json({ message: 'advisorId ต้องเป็นอาจารย์ (teacher)' });
+    }
+
+    // ตรวจสอบว่าไม่ว่าเป็นบทบาทใด ผู้สร้างยังไม่มีโปรเจคในปีการศึกษานี้
+    const userId = req.user.id;
+    const exists = await Project.exists({ createdBy: userId, academicYear });
+    if (exists) {
+      return res.status(400).json({ message: 'คุณมีโปรเจคในปีการศึกษานี้แล้ว' });
+    }
+
+    // Build initial member set: include creator if student
+    const rawSet = new Set(memberIds.map(toStrId));
+    if (req.user.role === 'student') rawSet.add(userId);
+
+    const finalMembers = [];
+    for (const mid of rawSet) {
+      if (!mid) continue;
+      // Accept only students
+      if (!(await isStudent(mid))) continue;
+      // Ensure this member is not already in another project for this academic year
+      const exists = await Project.exists({ academicYear, members: mid });
+      if (exists) {
+        // Skip members already in a project this year
+        continue;
+      }
+      finalMembers.push(mid);
+    }
+
+    const payload = {
+      name: name.trim(),
+      description: description.trim(),
+      academicYear: academicYear.trim(),
+      files: Array.isArray(files) ? files.filter(Boolean) : [],
+      advisor: advisorId,
+      members: finalMembers,
+      createdBy: userId,
+    };
+    const doc = await Project.create(payload);
+    const populated = await Project.findById(doc._id)
+      .populate('advisor', '_id username email role fullName studentId')
+      .populate('members', '_id username email role fullName studentId')
+      .populate('createdBy', '_id username email role fullName studentId')
+      .lean();
+    res.status(201).json(populated);
+  } catch (err) { next(err); }
+};
+
+// ดึงโปรเจคทั้งหมด (active)
+export const listProjects = async (req, res, next) => {
+  try {
+    // ดึงโปรเจคทั้งหมด (admin/teacher อาจใช้)
+    const projects = await Project.find({ status: 'active' })
+      .sort({ createdAt: -1 })
+      .populate('advisor', '_id username email role fullName studentId')
+      .populate('members', '_id username email role fullName studentId')
+      .populate('createdBy', '_id username email role fullName studentId')
+      .lean();
+    res.json(projects);
+  } catch (err) { next(err); }
+};
+
+// ดึงโปรเจคที่เกี่ยวข้องกับผู้ใช้ (เป็นสมาชิก ผู้สร้าง หรืออาจารย์ที่ปรึกษา)
+export const listMyProjects = async (req, res, next) => {
+  try {
+    const uid = toStrId(req.user.id);
+    const items = await Project.find({
+      status: 'active',
+      $or: [
+        { members: uid },
+        { advisor: uid },
+        { createdBy: uid },
+      ],
+    })
+      .sort({ createdAt: -1 })
+      .populate('advisor', '_id username email role fullName studentId')
+      .populate('members', '_id username email role fullName studentId')
+      .populate('createdBy', '_id username email role fullName studentId')
+      .lean();
+    res.json(items);
+  } catch (err) { next(err); }
+};
+
+// ดึงข้อมูลโปรเจคแต่ละรายการ พร้อมกลุ่มภายใน
+export const getProjectById = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findById(id)
+      .populate('advisor', '_id username email role fullName studentId')
+      .populate('members', '_id username email role fullName studentId')
+      .populate('createdBy', '_id username email role fullName studentId')
+      .lean();
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    res.json(project);
+  } catch (err) { next(err); }
+};
+
+// แก้ไขโปรเจค (เฉพาะผู้สร้างหรือแอดมิน)
+export const updateProject = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const up = req.body;
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // ตรวจสิทธิ์: ผู้สร้างหรือ admin เท่านั้น
+    if (project.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์แก้ไขโปรเจคนี้' });
+    }
+
+    if (up.name) project.name = up.name.trim();
+    if (up.description !== undefined) project.description = up.description.trim();
+    // ไม่อนุญาตให้เปลี่ยน academicYear ของโปรเจค
+    if (up.academicYear && up.academicYear !== project.academicYear) {
+      return res.status(400).json({ message: 'ไม่สามารถเปลี่ยนปีการศึกษาของโปรเจคนี้ได้' });
+    }
+    if (up.files && Array.isArray(up.files)) {
+      project.files = up.files.filter(Boolean);
+    }
+    if (up.advisorId) {
+      if (!(await isTeacher(up.advisorId))) {
+        return res.status(400).json({ message: 'advisorId must be a teacher' });
+      }
+      project.advisor = up.advisorId;
+    }
+    if (up.status) project.status = up.status;
+    await project.save();
+    const populated = await Project.findById(project._id)
+      .populate('advisor', '_id username email role fullName studentId')
+      .populate('members', '_id username email role fullName studentId')
+      .populate('createdBy', '_id username email role fullName studentId')
+      .lean();
+    res.json(populated);
+  } catch (err) { next(err); }
+};
+
+// ลบโปรเจค (soft delete โดยเปลี่ยนสถานะ) เฉพาะแอดมิน
+export const deleteProject = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+    // เฉพาะ admin เท่านั้นที่ลบได้
+    if (req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ลบโปรเจคนี้' });
+    }
+    project.status = 'archived';
+    await project.save();
+    res.json({ message: 'Archived' });
+  } catch (err) { next(err); }
+};
+
+// ค้นหา user ตามเงื่อนไข เพื่อเพิ่มสมาชิกในโปรเจค
+export const searchUsers = async (req, res, next) => {
+  try {
+    const q = (req.query.q || '').trim();
+    const role = (req.query.role || 'student').trim();
+    const limit = Math.min(parseInt(req.query.limit || '10', 10), 50);
+    const academicYear = req.query.academicYear;
+    const excludeProject = req.query.excludeProject;
+    const excludeIds = req.query.excludeIds
+      ? req.query.excludeIds.split(',').map(s => s.trim()).filter(Boolean)
+      : [];
+
+    const filter = {};
+    if (role) filter.role = role;
+    if (q) {
+      filter.$or = [
+        { username: new RegExp(q, 'i') },
+        { email: new RegExp(q, 'i') },
+      ];
+    }
+
+    const combinedExcludeIds = new Set(excludeIds);
+    const currentUserId = toStrId(req.user.id);
+    combinedExcludeIds.add(currentUserId);
+
+    // หากระบุ excludeProject ให้เอา advisor และสมาชิกออกจากตัวเลือก
+    if (excludeProject) {
+      const p = await Project.findById(excludeProject).select('members advisor').lean();
+      if (p?.advisor) combinedExcludeIds.add(toStrId(p.advisor));
+      (p?.members || []).map(toStrId).forEach(id => combinedExcludeIds.add(id));
+    }
+    // หากระบุ academicYear ให้ไม่รวมสมาชิกที่อยู่ในโปรเจคปีนั้นอยู่แล้ว
+    if (academicYear) {
+      const conflicts = await Project.find({ academicYear }).select('members');
+      conflicts.forEach(doc => (doc.members || []).map(toStrId).forEach(id => combinedExcludeIds.add(id)));
+    }
+
+    if (combinedExcludeIds.size > 0) {
+      const ninIds = [...combinedExcludeIds]
+        .map(id => (typeof id === 'string' ? id.trim() : toStrId(id)))
+        .filter(Boolean)
+        .filter(id => mongoose.isValidObjectId(id))
+        .map(id => new mongoose.Types.ObjectId(id));
+      if (ninIds.length) filter._id = { $nin: ninIds };
+    }
+
+    const users = await User.find(filter)
+      .select('_id username email role fullName studentId')
+      .limit(limit)
+      .lean();
+
+    res.json(users);
+  } catch (err) { next(err); }
+};
+
+// เพิ่มสมาชิกในโปรเจค
+export const addMembers = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { memberIds = [] } = req.body;
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // ตรวจสิทธิ์: ผู้สร้างหรือ admin เท่านั้น
+    if (project.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์เพิ่มสมาชิกในโปรเจคนี้' });
+    }
+
+    const addList = [];
+    for (const mid of memberIds.map(toStrId)) {
+      if (!mid) continue;
+      // ห้ามเพิ่ม advisor เป็นสมาชิก
+      if (toStrId(project.advisor) === mid) continue;
+      // ข้ามคนที่อยู่แล้ว
+      if (project.members.map(toStrId).includes(mid)) continue;
+      // รับเฉพาะนักศึกษา
+      if (!(await isStudent(mid))) continue;
+      // ตรวจสอบว่าคนนี้ไม่ได้อยู่ในโปรเจคปีเดียวกันแล้ว
+      const exists = await Project.exists({ academicYear: project.academicYear, members: mid });
+      if (exists) continue;
+      addList.push(mid);
+    }
+    if (addList.length) {
+      await Project.updateOne({ _id: id }, { $addToSet: { members: { $each: addList } } });
+    }
+    const populated = await Project.findById(id)
+      .populate('advisor', '_id username email role fullName studentId')
+      .populate('members', '_id username email role fullName studentId')
+      .populate('createdBy', '_id username email role fullName studentId')
+      .lean();
+    res.json(populated);
+  } catch (err) { next(err); }
+};
+
+// ลบสมาชิกจากโปรเจค
+export const removeMembers = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { memberIds = [] } = req.body;
+    const project = await Project.findById(id);
+    if (!project) return res.status(404).json({ message: 'Project not found' });
+
+    // ตรวจสิทธิ์: ผู้สร้างหรือ admin เท่านั้น
+    if (project.createdBy.toString() !== req.user.id && req.user.role !== 'admin') {
+      return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ลบสมาชิกในโปรเจคนี้' });
+    }
+
+    const removeList = memberIds.map(toStrId).filter(mid => mid && mid !== toStrId(project.createdBy));
+    if (removeList.length) {
+      await Project.updateOne({ _id: id }, { $pull: { members: { $in: removeList } } });
+    }
+    const populated = await Project.findById(id)
+      .populate('advisor', '_id username email role fullName studentId')
+      .populate('members', '_id username email role fullName studentId')
+      .populate('createdBy', '_id username email role fullName studentId')
+      .lean();
+    res.json(populated);
+  } catch (err) { next(err); }
+};
