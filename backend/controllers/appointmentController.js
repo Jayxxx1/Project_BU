@@ -160,6 +160,7 @@ export const getAppointmentById = async (req, res, next) => {
 
     if (!doc) return res.status(404).json({ message: 'Not found' });
 
+<<<<<<< HEAD
 
     // Allow admin to view any appointment detail without ownership constraints
     const isAdmin = req.user?.role === 'admin';
@@ -168,11 +169,22 @@ export const getAppointmentById = async (req, res, next) => {
     let canSee = isAdmin ||
       (doc.createBy?._id?.toString() === uid ||
        (doc.participants || []).some(p => p?._id?.toString() === uid));
+=======
+    // เงื่อนไขสิทธิ์: ผู้สร้าง, ผู้เข้าร่วม, ที่ปรึกษา/สมาชิกโปรเจค
+    const uid = req.user?.id?.toString();
+    let canSee =
+      doc.createBy?._id?.toString() === uid ||
+      (doc.participants || []).some(p => p?._id?.toString() === uid);
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 
     if (!canSee && doc.project) {
       const isAdvisor = doc.project?.advisor?._id?.toString() === uid;
       const isMember  = (doc.project?.members || []).some(m => m?._id?.toString() === uid);
+<<<<<<< HEAD
       canSee = isAdmin || isAdvisor || isMember;
+=======
+      canSee = isAdvisor || isMember;
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
     }
     if (!canSee) return res.status(403).json({ message: 'Forbidden' });
 

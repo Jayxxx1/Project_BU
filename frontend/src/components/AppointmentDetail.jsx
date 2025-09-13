@@ -22,7 +22,10 @@ import {
   IoCloseCircleOutline, 
   IoTimeOutline 
 } from "react-icons/io5";
+<<<<<<< HEAD
 import { useAuth } from '../contexts/AuthContext.jsx';
+=======
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 
 export default function AppointmentDetail() {
   const { id } = useParams();
@@ -43,9 +46,12 @@ export default function AppointmentDetail() {
   });
   const [error, setError] = useState("");
 
+<<<<<<< HEAD
   // Current user for permission checks
   const { user } = useAuth();
 
+=======
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
   useEffect(() => {
     let alive = true;
     (async () => {
@@ -244,6 +250,7 @@ export default function AppointmentDetail() {
                       </span>
                     </div>
                   </div>
+<<<<<<< HEAD
                   {/* Show edit button only to creator or admin */}
                   {(user?.role === 'admin' ||
                     (appointment?.createBy?._id?.toString() === user?._id?.toString()) ||
@@ -256,6 +263,16 @@ export default function AppointmentDetail() {
                       <span>แก้ไขนัดหมาย</span>
                     </button>
                   )}
+=======
+                  
+                  <button
+                    onClick={() => setEditMode(true)}
+                    className="group flex items-center px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-300"
+                  >
+                    <AiFillEdit className="text-xl mr-2 group-hover:rotate-12 transition-transform duration-300" />
+                    <span>แก้ไขนัดหมาย</span>
+                  </button>
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
                 </div>
               </div>
             </div>

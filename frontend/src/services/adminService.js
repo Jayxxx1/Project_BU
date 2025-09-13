@@ -13,11 +13,15 @@ function getToken() {
 const client = axios.create({ baseURL: API_URL });
 client.interceptors.request.use((config) => {
   const t = getToken();
+<<<<<<< HEAD
   if (!config.headers) config.headers = {};
+=======
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
   if (t) config.headers.Authorization = `Bearer ${t}`;
   return config;
 });
 
+<<<<<<< HEAD
 
 export const adminService = {
   // NEW
@@ -79,6 +83,16 @@ export const adminService = {
   async listTeachers(q = "") {
     const r = await client.get("/api/admin/teachers", { params: q ? { q } : {} });
     return r.data;
+=======
+export const adminService = {
+  async createTeacher({ username, email, password }) {
+    const r = await client.post("/api/admin/teachers", { username, email, password });
+    return r.data; // {_id, username, email, role}
+  },
+  async listTeachers(q = "") {
+    const r = await client.get("/api/admin/teachers", { params: q ? { q } : {} });
+    return r.data; // [{_id, username, email, role}]
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
   },
   async setRole(userId, role) {
     const r = await client.patch(`/api/admin/users/${userId}/role`, { role });

@@ -4,7 +4,10 @@ import { Link, useNavigate } from 'react-router-dom';
 // ปรับให้ตรงกับโปรเจกต์คุณ
 import { appointmentService } from '../services/appointmentService';
 import { userService } from '../services/userService';
+<<<<<<< HEAD
 import { useAuth } from '../contexts/AuthContext.jsx';
+=======
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 
 export default function MainContent() {
   const navigate = useNavigate();
@@ -16,10 +19,13 @@ export default function MainContent() {
 
   const [usersCount, setUsersCount] = useState(0);
 
+<<<<<<< HEAD
   // Current authenticated user.  Use this to decide which
   // appointments endpoint to call (mine vs all).
   const { user } = useAuth();
 
+=======
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
   // ---------- Helpers ----------
   const toDateObj = (appt) => {
     // ใช้ startAt เป็นหลัก ถ้าไม่มี fallback เป็น date + startTime
@@ -67,6 +73,7 @@ export default function MainContent() {
     let alive = true;
     (async () => {
       try {
+<<<<<<< HEAD
         // ดึงนัดหมายตามสิทธิ์: admin เห็นทั้งหมด, อื่น ๆ เห็นเฉพาะของตน
         let data;
         if (user?.role === 'admin') {
@@ -74,6 +81,10 @@ export default function MainContent() {
         } else {
           data = await appointmentService.list();
         }
+=======
+        // ✅ ดึงนัดหมายทั้งหมด (ไม่จำกัดเฉพาะของผู้ใช้)
+        const data = await appointmentService.listAll();
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
         if (!alive) return;
         setAppointments(Array.isArray(data) ? data : []);
       } catch (e) {
@@ -82,7 +93,11 @@ export default function MainContent() {
       }
     })();
     return () => { alive = false; };
+<<<<<<< HEAD
   }, [user]);
+=======
+  }, []);
+>>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 
   useEffect(() => {
     let alive = true;
