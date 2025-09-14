@@ -1,12 +1,7 @@
 import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 
-<<<<<<< HEAD
 // ===== เดิม: สร้างอาจารย์ =====
-=======
-
-// POST /api/admin/teachers  (admin เท่านั้น) 
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 export const createTeacher = async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) return res.status(400).json({ message: 'username, email, password required' });
@@ -19,11 +14,7 @@ export const createTeacher = async (req, res) => {
   res.status(201).json({ _id: teacher._id, username: teacher.username, email: teacher.email, role: teacher.role });
 };
 
-<<<<<<< HEAD
 // ===== เดิม: ลิสต์อาจารย์ =====
-=======
-// GET /api/admin/teachers  (admin เท่านั้น) — list + ค้นหา
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 export const listTeachersAdmin = async (req, res) => {
   const { q } = req.query;
   const filter = { role: 'teacher' };
@@ -35,11 +26,7 @@ export const listTeachersAdmin = async (req, res) => {
   res.json(items);
 };
 
-<<<<<<< HEAD
 // ===== เดิม: ตั้ง role แบบเฉพาะคน =====
-=======
-// PATCH /api/admin/users/:id/role 
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 export const setRole = async (req, res) => {
   const { id } = req.params;
   const { role } = req.body;
@@ -48,7 +35,6 @@ export const setRole = async (req, res) => {
   if (!user) return res.status(404).json({ message: 'User not found' });
   res.json(user);
 };
-<<<<<<< HEAD
 
 // ===== ใหม่: ลิสต์ผู้ใช้ทั้งหมด + ค้นหา/กรอง =====
 export const listAllUsers = async (req, res) => {
@@ -131,5 +117,3 @@ export const deleteUserAdmin = async (req, res) => {
   await user.deleteOne();
   res.json({ message: 'deleted' });
 };
-=======
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374

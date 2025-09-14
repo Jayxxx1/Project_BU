@@ -1,9 +1,5 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
 import { useNavigate, useLocation } from 'react-router-dom';
-=======
-import { useNavigate } from 'react-router-dom';
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 import { useAuth } from '../contexts/AuthContext';
 
 export default function LoginPage() {
@@ -16,10 +12,7 @@ export default function LoginPage() {
 
   const navigate = useNavigate();
   const { login } = useAuth();
-<<<<<<< HEAD
   const location = useLocation();
-=======
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -29,12 +22,8 @@ export default function LoginPage() {
     try {
       await login(email.trim(), password.trim());
       alert('เข้าสู่ระบบสำเร็จ!');
-<<<<<<< HEAD
       const from = location.state?.from?.pathname || '/maincontent';
       navigate(from, { replace: true });
-=======
-      navigate('/');
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
     } catch (errMessage) {
       console.error('Login error:', errMessage);
       setError(errMessage || 'เกิดข้อผิดพลาดในการเข้าสู่ระบบ โปรดลองอีกครั้ง');

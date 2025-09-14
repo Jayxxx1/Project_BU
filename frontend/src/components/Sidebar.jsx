@@ -1,8 +1,7 @@
 import React, { useState } from 'react';
-<<<<<<< HEAD
 import { NavLink , useNavigate , useLocation , Link } from 'react-router-dom';
 import { AiFillPlusCircle, AiFillCalendar, AiFillHome } from "react-icons/ai";
-import { MdSummarize, MdGroup } from "react-icons/md";
+import { MdSummarize, MdGroup,MdOutlineAdminPanelSettings } from "react-icons/md";
 import { Users as UsersIcon} from 'lucide-react';
 import { IoMdInformationCircleOutline , } from "react-icons/io";
 import {useAuth} from '../contexts/AuthContext';
@@ -14,29 +13,13 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
   const isAdmin = user && user.role === 'admin';
   
   const navItems = [
-    { name: 'หน้าแรก', path: '/maincontent', icon: <AiFillHome className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-blue-500 to-cyan-500' },
-=======
-import { NavLink , useNavigate , useLocation } from 'react-router-dom';
-import { AiFillPlusCircle, AiFillCalendar, AiFillHome } from "react-icons/ai";
-import { MdSummarize, MdGroup } from "react-icons/md";
-import { IoMdInformationCircleOutline } from "react-icons/io";
-import {useAuth} from '../contexts/AuthContext';
-
-export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
-  const { isAuthenticated, user, logout } = useAuth(); // ดึง logout จาก useAuth
-  const navigate = useNavigate();
-  const location = useLocation(); // เพิ่ม useLocation เพื่อใช้ในการตรวจสอบ path
-
-  const navItems = [
     { name: 'หน้าแรก', path: '/', icon: <AiFillHome className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-blue-500 to-cyan-500' },
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
     { name: 'นัดหมายของฉัน', path: '/appointments', icon: <AiFillCalendar className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-purple-500 to-pink-500' },
     { name: 'สร้างนัดหมาย', path: '/appointments/create', icon: <AiFillPlusCircle className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-green-500 to-emerald-500' },
     { name: 'สรุปการประชุม', path: '/meetsummary', icon: <MdSummarize className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-orange-500 to-amber-500' },
     { name: 'โปรเจคของฉัน', path: '/projects', icon: <MdGroup className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-indigo-500 to-purple-500' },
     { name: 'เกี่ยวกับ', path: '/about', icon: <IoMdInformationCircleOutline className="text-xl md:text-2xl lg:text-2xl" />, color: 'from-gray-500 to-slate-500' },
-<<<<<<< HEAD
-    { name: 'เมนูแอดมิน', path: '/admin', icon: <UsersIcon className="w-5 h-5" />, color: 'from-purple-500 to-pink-500', requiresAdmin: true },
+    { name: 'เมนูแอดมิน', path: '/admin', icon: <MdOutlineAdminPanelSettings className="w-10 h-7.8" />, color: 'from-purple-500 to-pink-500', requiresAdmin: true },
   ];
   
   // กรอง navItems โดยใช้ .filter()
@@ -51,11 +34,6 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
   });
 
   const handleLogout = () => {
-=======
-  ];
-  
-  const handleLogout=()=>{
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
     logout();
     navigate('/login');
     toggleSidebar();
@@ -91,12 +69,8 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         {/* Mobile Navigation Menu */}
         <nav className="flex-grow mt-6 px-3">
           <ul className="space-y-2">
-<<<<<<< HEAD
             {/* ใช้ filteredNavItems แทน navItems */}
             {filteredNavItems.map((item, index) => (
-=======
-            {navItems.map((item, index) => (
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
               <li key={item.name} className="transform transition-all duration-200">
                 <NavLink
                   to={item.path}
@@ -124,22 +98,6 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
             ))}
           </ul>
         </nav>
-<<<<<<< HEAD
-=======
-
-        {/* Mobile Logout button */}
-        {/* <div className="p-6 border-t border-gray-200/50 bg-gradient-to-r from-red-50/50 to-pink-50/50">
-          <button 
-            onClick={handleLogout}
-            className="group flex items-center py-3 px-4 text-red-600 hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white rounded-xl transition-all duration-300 w-full hover:scale-105 hover:shadow-lg hover:shadow-red-500/25"
-          >
-            <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 013-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-            </svg>
-            <span className="font-medium">ออกจากระบบ</span>
-          </button>
-        </div> */}
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
       </aside>
 
       {/* Desktop Sidebar */}
@@ -150,12 +108,11 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         `}
       >
         {/* Desktop Sidebar Header */}
-        <div className={`flex items-center border-b border-gray-200/50 bg-gradient-to-r from-blue-50 to-indigo-50 transition-[padding] duration-700
+        <div className={`flex items-center  bg-gradient-to-r transition-[padding] duration-700
           ${isSidebarOpen ? 'p-6' : 'p-4 justify-center'}
         `}>
           <div className="flex-shrink-0 relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-white-400 to-blue-500 rounded-full blur-lg opacity-10 animate-pulse"></div>
-<<<<<<< HEAD
+            {/* <div className="absolute inset-0 bg-gradient-to-br from-white-400 to-blue-500 rounded-full blur-lg opacity-50 animate-pulse"></div> */}
             <Link
             to ="/"
             onClick={toggleSidebar}
@@ -163,13 +120,10 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
             >
             <img src="/logo/logo2.png" alt="Logo" className={`relative z-10 drop-shadow-lg transition-all duration-300 rounded-xl ${isSidebarOpen ? 'w-14 h-14' : 'w-12 h-12'}`} />
           </Link>
-=======
-            <img src="/logo/logo2.png" alt="Logo" className={`relative z-10 drop-shadow-lg transition-all duration-300 rounded-xl ${isSidebarOpen ? 'w-14 h-14' : 'w-12 h-12'}`} />
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
           </div>
           
           {isSidebarOpen && (
-            <div className="ml-4 text-sm font-bold text-gray-800 leading-tight animate-fade-in-delayed">
+            <div className="ml-4 text-sm font-bold text-gray-800 leading-tight animate-pulse ">
               <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent font-semibold">
                 Online Appointment<br />
                 Meeting System
@@ -181,12 +135,8 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
         {/* Desktop Navigation Menu */}
         <nav className="flex-grow mt-6 px-3">
           <ul className="space-y-2">
-<<<<<<< HEAD
             {/* ใช้ filteredNavItems แทน navItems */}
             {filteredNavItems.map((item, index) => (
-=======
-            {navItems.map((item, index) => (
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
               <li key={item.name} className="transform transition-all duration-200">
                 <NavLink
                   to={item.path}
@@ -216,36 +166,6 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
             ))}
           </ul>
         </nav>
-<<<<<<< HEAD
-=======
-
-        {/* Desktop Logout button */}
-        {/* <div className={`p-4 border-t border-gray-200/50 ${isSidebarOpen ? 'flex-col items-center' : 'flex justify-center'}`}>
-          <button
-            onClick={toggleSidebar}
-            className="group flex items-center justify-center p-3 text-gray-600 hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white rounded-xl transition-all duration-300 hover:scale-110 hover:shadow-lg"
-          >
-            <svg className={`w-5 h-5 transition-transform duration-300 ${isSidebarOpen ? 'rotate-180' : ''} group-hover:scale-110`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M11 19l-7-7 7-7m8 14l-7-7 7-7" />
-            </svg>
-            {isSidebarOpen && (
-              <span className="ml-2 font-medium animate-fade-in-delayed">ยุบเมนู</span>
-            )}
-          </button>
-          
-          {/* {isSidebarOpen && (
-            <button
-              onClick={handleLogout}
-              className="mt-4 group flex items-center justify-center py-3 px-4 text-red-600 hover:bg-gradient-to-r hover:from-red-500 hover:to-pink-500 hover:text-white rounded-xl transition-all duration-300 w-full hover:scale-105 hover:shadow-lg hover:shadow-red-500/25 animate-fade-in-delayed"
-            >
-              <svg className="w-5 h-5 mr-3 transition-transform duration-300 group-hover:scale-110 group-hover:rotate-12" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 013-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path>
-              </svg>
-              <span className="font-medium">ออกจากระบบ</span>
-            </button>
-          )} */} 
-        {/* </div> */}
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
       </aside>
 
       <style jsx>{`
@@ -280,8 +200,4 @@ export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
       `}</style>
     </>
   );
-<<<<<<< HEAD
 }
-=======
-}
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374

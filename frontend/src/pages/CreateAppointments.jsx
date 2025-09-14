@@ -73,13 +73,13 @@ export default function CreateAppointment() {
     setSelectedAdvisor(
       proj?.advisor
         ? {
-            name:
-              proj.advisor.fullName ||
-              proj.advisor.username ||
-              proj.advisor.email,
-            email: proj.advisor.email,
-            _id: proj.advisor._id,
-          }
+          name:
+            proj.advisor.fullName ||
+            proj.advisor.username ||
+            proj.advisor.email,
+          email: proj.advisor.email,
+          _id: proj.advisor._id,
+        }
         : null
     );
   }, [formData.project, projects]);
@@ -117,31 +117,31 @@ export default function CreateAppointment() {
 
   const validateStep = (step) => {
     const newErrors = {};
-    
+
     if (step === 1) {
       if (!formData.project) newErrors.project = "กรุณาเลือกโปรเจกต์";
     }
-    
+
     if (step === 2) {
       if (!formData.title.trim()) newErrors.title = "กรุณากรอกหัวข้อการนัดหมาย";
     }
-    
+
     if (step === 3) {
       if (!formData.date) newErrors.date = "กรุณาเลือกวันที่";
       if (!formData.startTime) newErrors.startTime = "กรุณาเลือกเวลาเริ่มต้น";
       if (!formData.endTime) newErrors.endTime = "กรุณาเลือกเวลาสิ้นสุด";
-      
+
       if (formData.startTime && formData.endTime) {
         const start = new Date(`${formData.date}T${formData.startTime}`);
         const end = new Date(`${formData.date}T${formData.endTime}`);
         if (end <= start) newErrors.endTime = "เวลาสิ้นสุดต้องหลังเวลาเริ่มต้น";
       }
-      
+
       if (formData.meetingType === "offline" && !formData.location.trim()) {
         newErrors.location = "กรุณากรอกสถานที่";
       }
     }
-    
+
     setStepErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -153,7 +153,7 @@ export default function CreateAppointment() {
     // เลื่อนขึ้นเล็กน้อยให้ผู้ใช้เห็นว่ามีป๊อปอัพ
     try {
       window.scrollTo({ top: 0, behavior: "smooth" });
-    } catch {}
+    } catch { }
   };
 
   const handlePreview = (e) => {
@@ -229,13 +229,13 @@ export default function CreateAppointment() {
           const isActive = currentStep === step.id;
           const isCompleted = currentStep > step.id;
           const Icon = step.icon;
-          
+
           return (
             <div key={step.id} className="flex items-center">
               <div className="flex flex-col items-center min-w-0 flex-shrink-0">
                 <div className={`
                   w-10 h-10 md:w-12 md:h-12 rounded-full flex items-center justify-center transition-all duration-200
-                  ${isActive ? 'bg-blue-500 text-white shadow-lg scale-110' : 
+                  ${isActive ? 'bg-blue-500 text-white shadow-lg scale-110' :
                     isCompleted ? 'bg-green-500 text-white' : 'bg-gray-200 text-gray-500'}
                 `}>
                   <Icon className="w-5 h-5 md:w-6 md:h-6" />
@@ -269,13 +269,13 @@ export default function CreateAppointment() {
 
       <div className="grid gap-4">
         {projects.map(project => (
-          <div 
+          <div
             key={project._id}
             onClick={() => handleChange({ target: { name: 'project', value: project._id } })}
             className={`
               p-4 md:p-6 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md
-              ${formData.project === project._id 
-                ? 'border-blue-500 bg-blue-50 shadow-lg' 
+              ${formData.project === project._id
+                ? 'border-blue-500 bg-blue-50 shadow-lg'
                 : 'border-gray-200 hover:border-gray-300'}
             `}
           >
@@ -452,12 +452,12 @@ export default function CreateAppointment() {
       <div className="space-y-4">
         <label className="block text-base font-semibold text-gray-700">รูปแบบการประชุม *</label>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div 
+          <div
             onClick={() => handleChange({ target: { name: 'meetingType', value: 'offline' } })}
             className={`
               p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md
-              ${formData.meetingType === 'offline' 
-                ? 'border-blue-500 bg-blue-50 shadow-lg' 
+              ${formData.meetingType === 'offline'
+                ? 'border-blue-500 bg-blue-50 shadow-lg'
                 : 'border-gray-200 hover:border-gray-300'}
             `}
           >
@@ -478,12 +478,12 @@ export default function CreateAppointment() {
             </div>
           </div>
 
-          <div 
+          <div
             onClick={() => handleChange({ target: { name: 'meetingType', value: 'online' } })}
             className={`
               p-4 border-2 rounded-xl cursor-pointer transition-all duration-200 hover:shadow-md
-              ${formData.meetingType === 'online' 
-                ? 'border-blue-500 bg-blue-50 shadow-lg' 
+              ${formData.meetingType === 'online'
+                ? 'border-blue-500 bg-blue-50 shadow-lg'
                 : 'border-gray-200 hover:border-gray-300'}
             `}
           >
@@ -517,8 +517,8 @@ export default function CreateAppointment() {
             name="location"
             value={formData.location}
             onChange={handleChange}
-            placeholder={formData.meetingType === 'offline' 
-              ? "เช่น อาคารเรียนรวม 1 ห้อง 201" 
+            placeholder={formData.meetingType === 'offline'
+              ? "เช่น อาคารเรียนรวม 1 ห้อง 201"
               : "เช่น https://teams.microsoft.com/meeting/..."
             }
             className={`
@@ -547,7 +547,7 @@ export default function CreateAppointment() {
               แนบไฟล์เอกสาร
             </label>
           </div>
-          
+
           {attachEnabled && (
             <div className="bg-gray-50 p-4 rounded-xl">
               <input
@@ -664,18 +664,28 @@ export default function CreateAppointment() {
     setCurrentStep(4);
     // Show preview modal after reaching step 4
     setTimeout(() => {
-      handlePreview({ preventDefault: () => {} });
+      handlePreview({ preventDefault: () => { } });
     }, 100);
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+  <div className="relative min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
+    {/* BG image layer (อยู่เหนือ gradient, ใต้คอนเทนต์) */}
+    <div
+      aria-hidden="true"
+      className="
+        absolute inset-0 z-0 pointer-events-none
+        bg-[url('/bg/bg.webp')] bg-cover bg-center bg-no-repeat bg-fixed
+        blur-sm
+      "
+    />
+
+    {/* เนื้อหาทั้งหมดต้องอยู่ z-10 */}
+    <div className="relative z-10">
       <div className="container mx-auto px-4 py-6 md:py-8 max-w-4xl">
         {/* Header */}
         <div className="text-center mb-6 md:mb-8">
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">
-            สร้างนัดหมายใหม่
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-gray-800 mb-2">สร้างนัดหมายใหม่</h1>
           <p className="text-gray-600">จัดการนัดหมายกับอาจารย์ที่ปรึกษาได้อย่างง่ายดาย</p>
         </div>
 
@@ -684,21 +694,18 @@ export default function CreateAppointment() {
 
         {/* Main Content */}
         <div className="bg-white rounded-2xl shadow-xl overflow-hidden">
-          <div className="p-6 md:p-8">
-            {renderStepContent()}
-          </div>
+          <div className="p-6 md:p-8">{renderStepContent()}</div>
 
           {/* Navigation Buttons */}
           <div className="bg-gray-50 px-6 md:px-8 py-4 flex justify-between items-center">
             <button
               onClick={prevStep}
               disabled={currentStep === 1}
-              className={`
-                px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium transition-all duration-200
-                ${currentStep === 1 
-                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed' 
-                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'}
-              `}
+              className={`px-4 md:px-6 py-2 md:py-3 rounded-xl font-medium transition-all duration-200 ${
+                currentStep === 1
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-gray-200 text-gray-700 hover:bg-gray-300 active:scale-95'
+              }`}
             >
               ← ก่อนหน้า
             </button>
@@ -714,17 +721,15 @@ export default function CreateAppointment() {
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className={`
-                  px-6 md:px-8 py-3 font-bold rounded-xl transition-all duration-200 flex items-center space-x-2
-                  ${loading 
-                    ? 'bg-gray-400 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 active:scale-95'}
-                  text-white
-                `}
+                className={`px-6 md:px-8 py-3 font-bold rounded-xl transition-all duration-200 flex items-center space-x-2 text-white ${
+                  loading
+                    ? 'bg-gray-400 cursor-not-allowed'
+                    : 'bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 active:scale-95'
+                }`}
               >
                 {loading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
                     <span>กำลังสร้าง...</span>
                   </>
                 ) : (
@@ -737,29 +742,29 @@ export default function CreateAppointment() {
             )}
           </div>
         </div>
-
-        {/* Your original modals - keeping ALL your logic */}
-        <ConfirmAppointmentModal
-          open={showPreview}
-          onClose={() => setShowPreview(false)}
-          onConfirm={handleConfirmSubmit}
-          formData={formData}
-          files={files}
-          projectInfo={selectedProject}
-          members={members}
-          advisor={selectedAdvisor}
-          student={(user?.user || user) ?? null}
-          loading={loading}
-          projectTitle={selectedProjectTitle}
-        />
-
-        <FeedbackModal
-          open={showFeedback}
-          message={feedbackMsg}
-          onClose={() => setShowFeedback(false)}
-          autoClose={0}
-        />
       </div>
+
+      {/* Modals */}
+      <ConfirmAppointmentModal
+        open={showPreview}
+        onClose={() => setShowPreview(false)}
+        onConfirm={handleConfirmSubmit}
+        formData={formData}
+        files={files}
+        projectInfo={selectedProject}
+        members={members}
+        advisor={selectedAdvisor}
+        student={(user?.user || user) ?? null}
+        loading={loading}
+        projectTitle={selectedProjectTitle}
+      />
+      <FeedbackModal
+        open={showFeedback}
+        message={feedbackMsg}
+        onClose={() => setShowFeedback(false)}
+        autoClose={0}
+      />
     </div>
-  );
+  </div>
+);
 }

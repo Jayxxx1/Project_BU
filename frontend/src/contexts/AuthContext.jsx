@@ -36,11 +36,7 @@ export const AuthProvider = ({ children }) => {
         localStorage.setItem('user', JSON.stringify(data));
       } else {
         throw new Error('Invalid login response');
-<<<<<<< HEAD
       } 
-=======
-      }
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
       return data;
     } finally {
       setLoading(false);

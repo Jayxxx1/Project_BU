@@ -1,6 +1,5 @@
 import express from "express";
 import bcrypt from "bcryptjs";
-<<<<<<< HEAD
 import { protect, requireRole } from "../middleware/authMiddleware.js";
 import User from "../models/User.js";
 
@@ -99,15 +98,6 @@ router.post("/users", async (req, res, next) => {
 /** ================= TEACHERS (ของเดิม) =================
  * GET /api/admin/teachers?q=
  */
-=======
-import { protect, requireRole } from '../middleware/authMiddleware.js';
-import User from "../models/User.js";
-
-const router = express.Router();
-router.use(protect, requireRole("admin"));
-
-// GET /api/admin/teachers
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 router.get("/teachers", async (req, res, next) => {
   try {
     const q = (req.query.q || "").trim();
@@ -123,11 +113,7 @@ router.get("/teachers", async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
-<<<<<<< HEAD
 /** POST /api/admin/teachers (ของเดิม) */
-=======
-// POST /api/admin/teachers
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 router.post("/teachers", async (req, res, next) => {
   try {
     const { username, email, password } = req.body;
@@ -138,7 +124,6 @@ router.post("/teachers", async (req, res, next) => {
     res.status(201).json({ _id: u._id, username: u.username, email: u.email, role: u.role });
   } catch (e) { next(e); }
 });
-<<<<<<< HEAD
 router.patch("/users/:id", async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -170,7 +155,5 @@ router.patch("/users/:id", async (req, res, next) => {
     next(e);
   }
 });
-=======
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 
 export default router;

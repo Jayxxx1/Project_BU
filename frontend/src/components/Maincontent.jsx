@@ -1,313 +1,267 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React from "react";
+import { useNavigate, Link } from "react-router-dom";
+import { useAuth } from "../contexts/AuthContext.jsx";
 
-// ปรับให้ตรงกับโปรเจกต์คุณ
-import { appointmentService } from '../services/appointmentService';
-import { userService } from '../services/userService';
-<<<<<<< HEAD
-import { useAuth } from '../contexts/AuthContext.jsx';
-=======
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
 
 export default function MainContent() {
   const navigate = useNavigate();
-
-  const [appointments, setAppointments] = useState([]);      
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [users, setUsers] = useState([]);
-
-  const [usersCount, setUsersCount] = useState(0);
-
-<<<<<<< HEAD
-  // Current authenticated user.  Use this to decide which
-  // appointments endpoint to call (mine vs all).
   const { user } = useAuth();
 
-=======
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
-  // ---------- Helpers ----------
-  const toDateObj = (appt) => {
-    // ใช้ startAt เป็นหลัก ถ้าไม่มี fallback เป็น date + startTime
-    if (appt?.startAt) return new Date(appt.startAt);
-    if (appt?.date && appt?.startTime) return new Date(`${appt.date}T${appt.startTime}:00`);
-    return null;
-  };
+  const displayName = user?.fullName || user?.username || user?.email || "ผู้ใช้";
 
-  const formatThaiDateTime = (d) =>
-    d ? d.toLocaleString('th-TH', { dateStyle: 'long', timeStyle: 'short' }) : '-';
-
-  // เช็คว่าอยู่ "วันนี้" ในโซนเวลา Bangkok (ไม่สนวินาที)
-  const isTodayBangkok = (d) => {
-    if (!d) return false;
-    const tz = 'Asia/Bangkok';
-    const now = new Date();
-
-    const ymd = (x) =>
-      new Intl.DateTimeFormat('th-TH', { timeZone: tz, year: 'numeric', month: '2-digit', day: '2-digit' })
-        .format(x);
-
-    return ymd(d) === ymd(now);
-  };
-
-  const getStatusProps = (status) => {
-    const s = (status || '').toLowerCase();
-    switch (s) {
-      case 'approved':
-      case 'confirmed':
-        return { bg: 'bg-green-100', color: 'text-green-800', label: 'อนุมัติแล้ว', dot: 'bg-green-500' };
-      case 'cancelled':
-        return { bg: 'bg-red-100', color: 'text-red-800', label: 'ยกเลิกแล้ว', dot: 'bg-red-500' };
-      case 'rejected':
-        return { bg: 'bg-red-100', color: 'text-red-800', label: 'ปฏิเสธแล้ว', dot: 'bg-red-500' };
-      case 'reschedule_requested':
-        return { bg: 'bg-purple-100', color: 'text-purple-800', label: 'กำลังปรับปรุง', dot: 'bg-purple-500' };
-      case 'pending':
-      default:
-        return { bg: 'bg-yellow-100', color: 'text-yellow-800', label: 'รอยืนยัน', dot: 'bg-yellow-500' };
-    }
-  };
-
-  // ---------- Load real data ----------
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-<<<<<<< HEAD
-        // ดึงนัดหมายตามสิทธิ์: admin เห็นทั้งหมด, อื่น ๆ เห็นเฉพาะของตน
-        let data;
-        if (user?.role === 'admin') {
-          data = await appointmentService.listAll();
-        } else {
-          data = await appointmentService.list();
-        }
-=======
-        // ✅ ดึงนัดหมายทั้งหมด (ไม่จำกัดเฉพาะของผู้ใช้)
-        const data = await appointmentService.listAll();
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
-        if (!alive) return;
-        setAppointments(Array.isArray(data) ? data : []);
-      } catch (e) {
-      } finally {
-        if (alive) setLoading(false);
-      }
-    })();
-    return () => { alive = false; };
-<<<<<<< HEAD
-  }, [user]);
-=======
-  }, []);
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        // ดึงจำนวนผู้ใช้งานทั้งหมด (นับง่าย ๆ จากเมธอด list() ของ userService)
-        const users = await userService.list();
-        if (!alive) return;
-        setUsersCount(Array.isArray(users) ? users.length : (users?.total ?? 0));
-      } catch (e) {
-        if (!alive) return;
-        setUsersCount(0);
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  // ---------- Derived ----------
-const totalAppointmentsCount = useMemo(() => (appointments || []).length, [appointments]);
-
-
-const pendingAppointments = useMemo(() => {
-  return (appointments || []).filter(a => (a?.status || '').toLowerCase() === 'pending');
-}, [appointments]);
-
-// const todayPendingCount = useMemo(() => {
-//   return pendingAppointments.reduce((acc, a) => acc + (isTodayBangkok(toDateObj(a)) ? 1 : 0), 0);
-// }, [pendingAppointments]);
-
-  const recentPending = useMemo(() => {
-    return pendingAppointments
-      .slice()
-      .sort((a, b) => (toDateObj(a) || 0) - (toDateObj(b) || 0));
-  }, [pendingAppointments]);
-
-  const handleCreateAppointment = () => {
-    navigate('/appointments');
+  const handleCreate = () => {
+    navigate("/appointments"); // ไปหน้า/ฟอร์มสร้างนัดหมายของคุณ
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-100 via-white to-cyan-100 relative overflow-hidden">
-      {/* Background medical pattern */}
-      <div className="absolute inset-0 opacity-5">
-        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+    <div className="min-h-screen bg-[url('/bg/bg.webp')]  bg-cover bg-fixed  bg-no-repeat ">
+      <div className="relative z-10 backdrop-blur-sm">
+        {/* subtle pattern background */}
+        {/* <div className="absolute inset-0 opacity-5 pointer-events-none select-none">
+        <svg className="w-full h-full" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" aria-hidden="true">
           <defs>
-            <pattern id="medical-pattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <pattern id="dots-plus" width="20" height="20" patternUnits="userSpaceOnUse">
               <circle cx="10" cy="10" r="1" fill="currentColor"/>
               <path d="M10 5 L10 15 M5 10 L15 10" stroke="currentColor" strokeWidth="0.5"/>
             </pattern>
           </defs>
-          <rect width="100%" height="100%" fill="url(#medical-pattern)" />
+          <rect width="100%" height="100%" fill="url(#dots-plus)" />
         </svg>
-      </div>
+      </div> */}
 
-      <div className="relative z-10 lg:p-8 p-4">
-        {/* Welcome Section */}
-        <div className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-2xl p-8 text-white mb-8 relative overflow-hidden shadow-2xl transform hover:scale-105 transition-transform duration-300">
-          <div className="absolute top-0 right-0 w-32 h-32 bg-white bg-opacity-10 rounded-full -mr-16 -mt-16 animate-pulse"></div>
-          <div className="absolute bottom-0 left-0 w-24 h-24 bg-white bg-opacity-5 rounded-full -ml-12 -mb-12"></div>
-          <div className="absolute top-1/2 right-1/3 w-16 h-16 bg-white bg-opacity-5 rounded-full animate-bounce"></div>
-
-          <div className="relative z-10">
-            <div className="flex items-center mb-4">
-              <div className="w-12 h-12 bg-white bg-opacity-20 rounded-full flex items-center justify-center mr-4">
-                <svg className="w-6 h-6 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M10 2L3 7v11a2 2 0 002 2h10a2 2 0 002-2V7l-7-5z"/>
-                  <path d="M9 9h2v4H9V9zm0-2h2v1H9V7z"/>
-                </svg>
-              </div>
-              <h1 className="text-3xl font-medium">ยินดีต้อนรับ!</h1>
-            </div>
-
-            <p className="text-lg mb-6 text-blue-100 leading-relaxed">
-              ระบบบันทึกข้อมูลนัดหมายออนไลน์ที่ช่วยให้คุณจัดการนัดหมายได้ง่ายและรวดเร็ว
-            </p>
-
-            <button
-              onClick={handleCreateAppointment}
-              className="bg-cyan-500 shadow-xl shadow-cyan-500/50 hover:bg-cyan-400 hover:shadow-cyan-400/50 text-white px-8 py-4 rounded-full font-medium transition-all duration-300 backdrop-blur-sm flex items-center justify-center space-x-2 transform hover:scale-105 hover:-translate-y-1"
-            >
-              <svg className="w-7 h-7" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              <span className="text-lg">สร้างนัดหมายใหม่</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Quick Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
-          {/* นัดหมายทั้งหมด */}
-          <div className="bg-white/80 backdrop-blur-lg p-6 rounded-xl shadow-lg border border-white/20 transform hover:scale-105 transition-all duration-300 hover:shadow-xl">
-            <div className="flex items-center">
-              <div className="p-4 bg-gradient-to-br from-blue-400 to-blue-600 rounded-xl shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600 font-medium">จำนวนนัดหมายทั้งหมดของแอปเรา !</p>
-                <p className="text-3xl font-bold text-gray-800">{totalAppointmentsCount}</p>
-              </div>
-            </div>
-          </div>
-
-          {/* ผู้ใช้งานทั้งหมด */}
-          <div className="bg-white/80 backdrop-blur-lg p-6 rounded-xl shadow-lg border border-white/20 transform hover:scale-105 transition-all duration-300 hover:shadow-xl">
-            <div className="flex items-center">
-              <div className="p-4 bg-gradient-to-br from-green-400 to-green-600 rounded-xl shadow-lg">
-                <svg className="w-8 h-8 text-white" fill="currentColor" viewBox="0 0 20 20">
-                  <path d="M9 6a3 3 0 11-6 0 3 3 0 016 0zM17 6a3 3 0 11-6 0 3 3 0 016 0zM12.93 17c.046-.327.07-.66.07-1a6.97 6.97 0 00-1.5-4.33A5 5 0 0119 16v1h-6.07zM6 11a5 5 0 015 5v1H1v-1a5 5 0 015-5z" />
-                </svg>
-              </div>
-              <div className="ml-4">
-                <p className="text-sm text-gray-600 font-medium">ผู้ใช้งานทั้งหมด</p>
-                <p className="text-3xl font-bold text-gray-800">{usersCount}</p>
-              </div>
-              
-            </div>
-          </div>
-        </div>
-
-        {/* Recent Appointments — แสดงเฉพาะ 'รอยืนยัน' */}
-        <div className="bg-white/80 backdrop-blur-lg rounded-2xl shadow-xl border border-white/20 p-8">
-          <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-semibold text-gray-800 flex items-center">
-              <svg className="w-6 h-6 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M6 2a1 1 0 00-1 1v1H4a2 2 0 00-2 2v10a2 2 0 002 2h12a2 2 0 002-2V6a2 2 0 00-2-2h-1V3a1 1 0 10-2 0v1H7V3a1 1 0 00-1-1zm0 5a1 1 0 000 2h8a1 1 0 100-2H6z" />
-              </svg>
-              นัดหมายล่าสุด
-            </h2>
-          </div>
-
-          {loading ? (
-            <div className="py-10 text-center text-gray-500">กำลังโหลดข้อมูล…</div>
-          ) : error ? (
-            <div className="py-10 text-center text-rose-600">{error}</div>
-          ) : recentPending.length === 0 ? (
-            <div className="py-10 text-center text-gray-500">ไม่มีนัดหมายสถานะ “รอยืนยัน”</div>
-          ) : (
-            <div className="space-y-4">
-              {recentPending.map((appointment, index) => {
-                const d = toDateObj(appointment); // ใช้สำหรับจัดลำดับ แต่จะไม่แสดงวันที่
-                const { bg, color, label, dot } = getStatusProps(appointment.status);
-                return (
-                  <div
-                    key={appointment._id}
-                    className="flex items-center justify-between p-6 bg-gradient-to-r from-gray-50 to-white rounded-xl border border-gray-100 shadow-md hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1"
-                    style={{ animationDelay: `${index * 0.1}s` }}
-                  >
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-4 h-4 ${dot} rounded-full animate-pulse shadow-md`}></div>
-                      <div>
-                        {/* หัวข้อ */}
-                        <p className="font-semibold text-gray-800 text-lg mb-1">
-                          {appointment.title || 'ไม่ระบุหัวข้อ'}
-                        </p>
-
-                        {/*  ไม่แสดงวัน/เวลา ตาม requirement */}
-                        <p className="text-gray-600 flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="currentColor" viewBox="0 0 20 20">
-                            <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" />
-                          </svg>
-                          {formatThaiDateTime(d)}
-                        </p>
-
-                        {/* ชื่อโปรเจค (ยังแสดงได้) */}
-                        {appointment.project?.name && (
-                          <p className="text-gray-600">
-                            โปรเจกต์: {appointment.project.name}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {/* สถานะ (แถบสี +ข้อความ) */}
-                    <span className={`px-4 py-2 text-sm font-medium ${bg} ${color} rounded-full shadow-sm`}>
-                      {label}
-                    </span>
-
-                    {/* ❌ ไม่แสดงปุ่มดูรายละเอียด เพื่อไม่ให้คนอื่นเห็นรายละเอียดเพิ่มเติม */}
-                    {/* <button
-                      onClick={() => navigate(`/appointments/${appointment._id}`)}
-                      className="px-4 py-1.5 text-xs font-medium text-white bg-blue-500 hover:bg-blue-600 rounded-full transition-colors"
-                    >
-                      ดูรายละเอียด
-                    </button> */}
+        <div className="relative z-10 px-4 py-10 sm:px-6 lg:px-8">
+          {/* HERO */}
+          <section className="max-w-6xl mx-auto">
+            <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white rounded-3xl p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+              <div className="absolute -right-16 -top-16 w-56 h-56 bg-white/10 rounded-full blur-xl" />
+              <div className="absolute -left-10 -bottom-10 w-40 h-40 bg-white/10 rounded-full blur-lg" />
+              <div className="relative">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="w-12 h-12 rounded-full bg-white/20 flex items-center justify-center">
+                    {/* calendar icon */}
+                    <svg className="w-7 h-7 text-white" viewBox="0 0 24 24" fill="none">
+                      <path d="M7 3v4M17 3v4M4 11h16M5 21h14a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1M6 5H5a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
                   </div>
-                );
-              })}
-            </div>
-          )}
+                  <p className="uppercase tracking-wider text-blue-100 text-sm">ระบบนัดหมายออนไลน์</p>
+                </div>
+                <h1 className="text-3xl sm:text-4xl lg:text-5xl font-semibold leading-tight">
+                  สวัสดี {displayName} 👋<br />
+                  พร้อมหรือยังสำหรับการนัดหมายครั้งถัดไป?
+                </h1>
+                <p className="mt-5 text-blue-100 text-base sm:text-lg max-w-3xl">
+                  หน้านี้เป็นจุดเริ่มต้นก่อนใช้งาน — คุณสามารถสร้างนัดหมายใหม่ เลือกวันเวลา รูปแบบการพบ (ออนไลน์/ออนไซต์)
+                  และเชิญผู้เกี่ยวข้องได้ในไม่กี่คลิก
+                </p>
 
-          {/* Floating Action Button */}
-          <div className="fixed bottom-8 right-8 space-y-4">
-            <button
-              onClick={handleCreateAppointment}
-              className="w-14 h-14 bg-blue-500 hover:bg-blue-600 text-white rounded-full shadow-xl hover:shadow-2xl transition-all duration-300 flex items-center justify-center transform hover:scale-110"
-              title="สร้างนัดหมายใหม่"
-            >
-              <svg className="w-6 h-6" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-        </div>
+                <div className="mt-8 flex flex-wrap gap-3">
+                  <button
+                    onClick={handleCreate}
+                    className="inline-flex items-center gap-2 bg-cyan-500 hover:bg-cyan-400 text-white px-6 py-3 rounded-xl font-medium shadow-xl hover:shadow-2xl transition-all"
+                  >
+                    {/* plus icon */}
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 5v14M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+                    </svg>
+                    เริ่มสร้างนัดหมาย
+                  </button>
+
+                  <Link
+                    to="/help" // สร้างเพจ help/guide ตามโปรเจกต์จริง
+                    className="inline-flex items-center gap-2 bg-white/15 hover:bg-white/25 text-white px-6 py-3 rounded-xl font-medium transition-all"
+                  >
+                    {/* book icon */}
+                    <svg className="w-5 h-5" viewBox="0 0 24 24" fill="none">
+                      <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20M4 19.5V5.5A2.5 2.5 0 0 1 6.5 3H20v14H6.5A2.5 2.5 0 0 0 4 19.5Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                    วิธีใช้งานอย่างย่อ
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* ขั้นตอนการใช้งาน */}
+          <section className="max-w-6xl mx-auto mt-12">
+            <div className="grid md:grid-cols-3 gap-6">
+              <StepCard
+                index={1}
+                title="กรอกข้อมูลนัดหมาย"
+                desc="ระบุหัวข้อ วันเวลา สถานที่/ลิงก์ และรายละเอียดที่จำเป็น"
+                icon={
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
+                    <path d="M9 7h6M9 12h6M9 17h3M5 21h14a2 2 0 0 0 2-2V7l-4-4H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                }
+              />
+              <StepCard
+                index={2}
+                title="เชิญผู้เกี่ยวข้อง"
+                desc="เพิ่มผู้เข้าร่วมผ่านรายชื่อผู้ใช้หรืออีเมล และแนบหมายเหตุได้"
+                icon={
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
+                    <path d="M16 11c1.657 0 3-1.79 3-4s-1.343-4-3-4-3 1.79-3 4 1.343 4 3 4ZM5 9c1.657 0 3-1.79 3-4S6.657 1 5 1 2 2.79 2 5s1.343 4 3 4Zm11 2c-2.21 0-4.21 1.79-4.86 4.26-.24.92.51 1.74 1.46 1.74h6.8c.95 0 1.7-.82 1.46-1.74C20.21 12.79 18.21 11 16 11ZM5 11c-2.21 0-4.21 1.79-4.86 4.26-.24.92.51 1.74 1.46 1.74H8.4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                }
+              />
+              <StepCard
+                index={3}
+                title="ยืนยันและส่งแจ้งเตือน"
+                desc="ตรวจทานข้อมูล กดยืนยัน ระบบจะแจ้งเตือนไปยังผู้เกี่ยวข้อง"
+                icon={
+                  <svg className="w-7 h-7" viewBox="0 0 24 24" fill="none">
+                    <path d="m20 7-9 9-5-5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+                  </svg>
+                }
+              />
+            </div>
+          </section>
+
+          {/* จุดเด่น */}
+          <section className="max-w-6xl mx-auto mt-12">
+            <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl p-6 sm:p-8 shadow-xl">
+              <h2 className="text-xl sm:text-2xl font-semibold text-gray-900 mb-4">ทำไมต้องใช้ระบบนัดหมายนี้?</h2>
+              <ul className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 text-gray-700">
+                <FeatureItem
+                  title="ใช้งานง่าย"
+                  desc="ออกแบบให้ใช้งานได้ทันที ไม่ซับซ้อน"
+                  icon={
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                      <path d="M3 6h18M8 6v12m8-12v12M3 18h18" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  }
+                />
+                <FeatureItem
+                  title="ยืดหยุ่น"
+                  desc="รองรับทั้งนัดออนไลน์และออนไซต์"
+                  icon={
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                      <path d="M4 7h16M4 12h10M4 17h7" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  }
+                />
+                <FeatureItem
+                  title="สื่อสารครบ"
+                  desc="แนบหมายเหตุ ไฟล์ และรายชื่อผู้เข้าร่วมได้"
+                  icon={
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H7l-4 3V5a2 2 0 0 1 2-2h10" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M15 3h6v6" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                      <path d="M21 3 10 14" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  }
+                />
+                <FeatureItem
+                  title="ควบคุมสิทธิ์"
+                  desc="ปกป้องข้อมูลด้วยระบบสิทธิ์และการยืนยันตัวตน"
+                  icon={
+                    <svg className="w-6 h-6" viewBox="0 0 24 24" fill="none">
+                      <path d="M12 1 3 5v6c0 5.25 3.438 10.125 9 12 5.563-1.875 9-6.75 9-12V5l-9-4Z" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+                    </svg>
+                  }
+                />
+              </ul>
+
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  onClick={handleCreate}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-medium shadow-lg transition-all"
+                >
+                  สร้างนัดหมายใหม่ตอนนี้
+                </button>
+                <Link
+                  to="/appointments"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-gray-300 text-gray-700 hover:bg-gray-50 transition-all"
+                >
+                  ไปหน้าจัดการนัดหมาย
+                </Link>
+              </div>
+            </div>
+          </section>
+
+          {/* FAQ / Tips (ไม่ผูกข้อมูล) */}
+          <section className="max-w-6xl mx-auto mt-12">
+            <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl p-6 sm:p-8 shadow-xl">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 mb-4">คำแนะนำก่อนเริ่ม</h3>
+              <div className="grid sm:grid-cols-2 gap-6 text-gray-700 leading-relaxed">
+                <div>
+                  <p className="font-medium text-gray-900">เตรียมข้อมูลที่จำเป็น</p>
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>หัวข้อ/วัตถุประสงค์</li>
+                    <li>วันเวลาเริ่ม–สิ้นสุด</li>
+                    <li>รูปแบบการนัด (ออนไลน์/ออนไซต์) และสถานที่/ลิงก์</li>
+                    <li>ผู้เข้าร่วม/อีเมลที่ต้องแจ้ง</li>
+                  </ul>
+                </div>
+                <div>
+                  <p className="font-medium text-gray-900">หลักการรักษาความปลอดภัย</p>
+                  <ul className="list-disc pl-5 mt-2 space-y-1">
+                    <li>เห็นเฉพาะข้อมูลที่คุณมีสิทธิ์</li>
+                    <li>รายละเอียดเชิงลึกเข้าถึงได้เฉพาะผู้สร้าง/ผู้เกี่ยวข้อง/แอดมิน</li>
+                    <li>เปลี่ยนรหัสผ่านสม่ำเสมอ และอย่าเผยแพร่ลิงก์นัดหมายสาธารณะ</li>
+                  </ul>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          {/* FOOTER CTA */}
+          <section className="max-w-6xl mx-auto mt-12 mb-8">
+            <div className="bg-gradient-to-r from-cyan-500 to-blue-600 rounded-2xl p-6 sm:p-8 text-white flex flex-col sm:flex-row items-start sm:items-center justify-between shadow-2xl">
+              <div className="mb-4 sm:mb-0">
+                <h4 className="text-xl font-semibold">พร้อมแล้วใช่ไหม?</h4>
+                <p className="text-blue-100 mt-1">เริ่มสร้างนัดหมายแรกของคุณในไม่กี่ขั้นตอน</p>
+              </div>
+              <div className="flex gap-3">
+                <button
+                  onClick={handleCreate}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-white text-blue-700 font-medium hover:bg-blue-50 transition-all"
+                >
+                  เริ่มเลย
+                </button>
+                <Link
+                  to="/help"
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-white/60 text-white hover:bg-white/10 transition-all"
+                >
+                  ดูวิธีใช้งาน
+                </Link>
+              </div>
+            </div>
+          </section>
+        </div
+        >
       </div>
     </div>
+  );
+}
+
+/* ----------------- Small UI bits ----------------- */
+
+function StepCard({ index, title, desc, icon }) {
+  return (
+    <div className="bg-white/80 backdrop-blur-lg border border-white/60 rounded-2xl p-6 shadow-xl hover:shadow-2xl transition-all">
+      <div className="flex items-center gap-3 mb-3">
+        <div className="w-10 h-10 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center font-semibold">
+          {index}
+        </div>
+        <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
+      </div>
+      <div className="flex items-start gap-3 text-gray-700">
+        <div className="text-gray-500">{icon}</div>
+        <p className="leading-relaxed">{desc}</p>
+      </div>
+    </div>
+  );
+}
+
+function FeatureItem({ title, desc, icon }) {
+  return (
+    <li className="flex items-start gap-3 bg-white rounded-xl border border-gray-200 p-4 shadow-sm">
+      <div className="text-blue-600">{icon}</div>
+      <div>
+        <p className="font-medium text-gray-900">{title}</p>
+        <p className="text-gray-600 text-sm mt-1">{desc}</p>
+      </div>
+    </li>
   );
 }

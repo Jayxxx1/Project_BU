@@ -105,11 +105,7 @@ export default function Header({ isSidebarOpen, toggleSidebar }) {
                     <span className="text-sm text-gray-500">สวัสดี,</span>
                     <br />
                     <strong className="font-semibold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-<<<<<<< HEAD
                      คุณ {user?.fullName }
-=======
-                      {user?.username}
->>>>>>> 344b4826afa36497c6b49280dcd6663142fd9374
                     </strong>
                   </div>
                 </div>
