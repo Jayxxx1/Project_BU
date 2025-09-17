@@ -2,21 +2,10 @@ import mongoose from 'mongoose';
 
 /*
  * โครงสร้างข้อมูลสำหรับ Project ซึ่งตอนนี้ถูกนำมาใช้แทน Group
- * หนึ่งโปรเจคจะมี
- *  - projectNumber: หมายเลขหรือลำดับโปรเจค (เดิมคือ groupNumber)
- *  - name: ชื่อโปรเจค/กลุ่ม
- *  - description: รายละเอียดโปรเจค
- *  - academicYear: ปีการศึกษาที่โปรเจคอยู่ (จำเป็น)
- *  - files: รายการไฟล์อัปโหลดประจำโปรเจค (เก็บเป็นสตริงของชื่อไฟล์หรือลิงก์)
- *  - advisor: ผู้ให้คำปรึกษา (อาจารย์)
- *  - members: สมาชิกในโปรเจค (นักศึกษา)
- *  - createdBy: ผู้สร้างโปรเจค (มักเป็นนักศึกษาหรืออาจารย์)
- *  - status: สถานะ (active/archived)
  */
 const projectSchema = new mongoose.Schema(
   {
     // หมายเลขโปรเจคถูกยกเลิกในเวอร์ชันใหม่ เพราะใช้ปีการศึกษาและชื่อเป็นตัวระบุ
-    // หากต้องการระบุลำดับพิเศษสามารถเพิ่มในอนาคตได้ แต่ไม่จำเป็นอีกต่อไป
     name: {
       type: String,
       required: [true, 'กรุณากรอกชื่อโปรเจค'],
@@ -32,6 +21,9 @@ const projectSchema = new mongoose.Schema(
       required: [true, 'กรุณาระบุปีการศึกษา เช่น 2567'],
       trim: true,
       index: true,
+      // Restrict academicYear to exactly four digits (Thai academic years such as 2567).  This prevents accidental
+      // entry of characters or incorrect lengths.  Invalid values will trigger a Mongoose validation error.
+      match: [/^\d{4}$/, 'ปีการศึกษาต้องเป็นตัวเลข 4 หลัก เช่น 2567'],
     },
     files: [
       {

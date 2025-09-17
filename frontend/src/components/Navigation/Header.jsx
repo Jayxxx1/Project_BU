@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link , useNavigate} from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../../contexts/AuthContext';
 import { FiLogOut , FiUserPlus, FiLogIn, FiBell, FiSearch, FiChevronDown, FiX } from "react-icons/fi";
 import { CiSettings } from "react-icons/ci";
 

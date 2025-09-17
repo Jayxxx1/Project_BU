@@ -17,19 +17,10 @@ const isStudent = async (id) => {
 // Helper: convert to string id
 const toStrId = (v) => (typeof v === 'string' ? v : v?.toString());
 
-// สร้างโปรเจคใหม่ (เฉพาะ teacher หรือ admin)
+// สร้างโปรเจคใหม่ 
 export const createProject = async (req, res, next) => {
-  /*
-   * สร้างโปรเจคใหม่
-   * ผู้ใช้ทุกบทบาท (student, teacher, admin) สามารถสร้างโปรเจคได้
-   * ต้องระบุ: name, advisorId, academicYear
-   * ตรวจสอบว่า ผู้สร้างยังไม่มีโปรเจคในปีการศึกษานั้นมาก่อน
-   * ตรวจสอบว่า advisor เป็น teacher
-   * ตรวจสอบว่า memberIds ทั้งหมดเป็น student และยังไม่ได้อยู่ในโปรเจคปีการศึกษานี้
-   */
   try {
     const {
-      // projectNumber ถูกยกเลิก ไม่ต้องรับจากฟอร์มอีกต่อไป
       name,
       description = '',
       advisorId,
@@ -38,6 +29,10 @@ export const createProject = async (req, res, next) => {
       files = [],
     } = req.body;
 
+    // Validate academicYear numeric pattern (4 digits).  
+    if (!/^[0-9]{4}$/.test(String(academicYear || '').trim())) {
+      return res.status(400).json({ message: 'ปีการศึกษาต้องเป็นตัวเลข 4 หลัก เช่น 2567' });
+    }
     // Validate basic fields
     if (!name || !advisorId || !academicYear) {
       return res.status(400).json({ message: 'กรอกชื่อโปรเจค เลือกอาจารย์ และปีการศึกษาให้ครบถ้วน' });
@@ -95,7 +90,6 @@ export const createProject = async (req, res, next) => {
 // ดึงโปรเจคทั้งหมด (active)
 export const listProjects = async (req, res, next) => {
   try {
-    // ดึงโปรเจคทั้งหมด (admin/teacher อาจใช้)
     const projects = await Project.find({ status: 'active' })
       .sort({ createdAt: -1 })
       .populate('advisor', '_id username email role fullName studentId')
@@ -106,7 +100,7 @@ export const listProjects = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// ดึงโปรเจคที่เกี่ยวข้องกับผู้ใช้ (เป็นสมาชิก ผู้สร้าง หรืออาจารย์ที่ปรึกษา)
+// ดึงโปรเจคที่เกี่ยวข้องกับผู้ใช้ 
 export const listMyProjects = async (req, res, next) => {
   try {
     const uid = toStrId(req.user.id);
@@ -127,7 +121,7 @@ export const listMyProjects = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// ดึงข้อมูลโปรเจคแต่ละรายการ พร้อมกลุ่มภายใน
+// ดึงข้อมูลโปรเจคแต่ละรายการ
 export const getProjectById = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -141,7 +135,7 @@ export const getProjectById = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// แก้ไขโปรเจค (เฉพาะผู้สร้างหรือแอดมิน)
+// แก้ไขโปรเจค 
 export const updateProject = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -169,7 +163,13 @@ export const updateProject = async (req, res, next) => {
       }
       project.advisor = up.advisorId;
     }
-    if (up.status) project.status = up.status;
+    if (up.status !== undefined) {
+      const allowed = ['active','archived'];
+      if (up.status && !allowed.includes(up.status)) {
+        return res.status(400).json({ message: 'status ไม่ถูกต้อง' });
+      }
+      project.status = up.status;
+    }
     await project.save();
     const populated = await Project.findById(project._id)
       .populate('advisor', '_id username email role fullName studentId')
@@ -180,13 +180,12 @@ export const updateProject = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// ลบโปรเจค (soft delete โดยเปลี่ยนสถานะ) เฉพาะแอดมิน
+// ลบโปรเจค (soft delete)
 export const deleteProject = async (req, res, next) => {
   try {
     const { id } = req.params;
     const project = await Project.findById(id);
     if (!project) return res.status(404).json({ message: 'Project not found' });
-    // เฉพาะ admin เท่านั้นที่ลบได้
     if (req.user.role !== 'admin') {
       return res.status(403).json({ message: 'คุณไม่มีสิทธิ์ลบโปรเจคนี้' });
     }
@@ -196,12 +195,20 @@ export const deleteProject = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// ค้นหา user ตามเงื่อนไข เพื่อเพิ่มสมาชิกในโปรเจค
+// ค้นหา user เพื่อเพิ่มสมาชิก
 export const searchUsers = async (req, res, next) => {
   try {
-    const q = (req.query.q || '').trim();
-    const role = (req.query.role || 'student').trim();
-    const limit = Math.min(parseInt(req.query.limit || '10', 10), 50);
+    const qRaw   = (req.query.q || '').trim();
+    let role  = (req.query.role || 'student').trim().toLowerCase();
+    // Only allow valid roles; default to student if invalid
+    if (!['student','teacher','admin'].includes(role)) role = 'student';
+    // Sanitize limit: must be positive integer; default 10; max 50
+    const parsedLimit = parseInt(req.query.limit, 10);
+    let limit = 10;
+    if (!Number.isNaN(parsedLimit) && parsedLimit > 0) {
+      limit = Math.min(parsedLimit, 50);
+    }
+    const q = qRaw;
     const academicYear = req.query.academicYear;
     const excludeProject = req.query.excludeProject;
     const excludeIds = req.query.excludeIds
@@ -211,9 +218,11 @@ export const searchUsers = async (req, res, next) => {
     const filter = {};
     if (role) filter.role = role;
     if (q) {
+      // Escape regex special characters in the search query to prevent Regex DoS or injection of special patterns.
+      const safePattern = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
       filter.$or = [
-        { username: new RegExp(q, 'i') },
-        { email: new RegExp(q, 'i') },
+        { username: new RegExp(safePattern, 'i') },
+        { email: new RegExp(safePattern, 'i') },
       ];
     }
 
@@ -251,7 +260,7 @@ export const searchUsers = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// เพิ่มสมาชิกในโปรเจค
+// เพิ่มสมาชิก
 export const addMembers = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -290,7 +299,7 @@ export const addMembers = async (req, res, next) => {
   } catch (err) { next(err); }
 };
 
-// ลบสมาชิกจากโปรเจค
+// ลบสมาชิก 
 export const removeMembers = async (req, res, next) => {
   try {
     const { id } = req.params;

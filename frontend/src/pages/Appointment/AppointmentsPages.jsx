@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { useAuth } from "../contexts/AuthContext";
-import { getAppointments } from "../services/appointmentService";
+import { useAuth } from "../../contexts/AuthContext";
+import { getAppointments } from "../../services/appointmentService";
 import { Link } from "react-router-dom";
 import { AiFillPlusCircle, AiFillCalendar, AiFillClockCircle } from "react-icons/ai";
 import { MdLocationOn, MdPerson } from "react-icons/md";

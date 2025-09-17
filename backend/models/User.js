@@ -30,12 +30,15 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true,
       required: function () { return this.role === 'student'; },
+      // Require studentId for students to be a 10-digit numeric string.  Without this validation the system
+      // could store arbitrary text or non-numeric IDs.  The regex enforces exactly 10 digits and throws a
+      // validation error if the input is invalid.  Note: partialFilterExpression for uniqueness remains intact below.
+      match: [/^\d{10}$/, 'รหัสนักศึกษาต้องเป็นตัวเลข 10 หลัก'],
     },
 
   },
   { timestamps: true }
 );
-
 
 userSchema.index(
   { studentId: 1 },
@@ -46,7 +49,5 @@ userSchema.index(
 userSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };
-
-// const User = mongoose.model('User', userSchema);
 
 export default mongoose.model('User', userSchema);

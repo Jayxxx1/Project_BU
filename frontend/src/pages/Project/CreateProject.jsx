@@ -1,10 +1,9 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { teacherService } from "../services/teacherService";
-import { projectService } from "../services/projectService";
-import FeedbackModal from "../components/FeedbackModal.jsx";
+import { teacherService } from "../../services/teacherService.js";
+import { projectService } from "../../services/projectService.js";
+import FeedbackModal from "../../components/Modal/FeedbackModal.jsx";
 import { Users, GraduationCap, PlusCircle } from "lucide-react";
-
 
 export default function CreateProject() {
   const navigate = useNavigate();
@@ -145,7 +144,6 @@ export default function CreateProject() {
               {error}
             </div>
           )}
-          {/* เลขโปรเจค (ยกเลิก) ถูกลบในเวอร์ชันนี้ */}
           {/* Project Name */}
           <div>
             <label className="block font-semibold mb-2 text-gray-700 text-base md:text-lg">
@@ -165,9 +163,22 @@ export default function CreateProject() {
             <label className="block font-semibold mb-2 text-gray-700 text-base md:text-lg">
               ปีการศึกษา <span className="text-red-500">*</span>
             </label>
+            {/*
+              Restrict academicYear input to numeric only.  Thai academic years are four-digit numbers (เช่น 2567).
+              On change we strip any non-digit characters and cap the length to 4 digits.  We also set inputMode and pattern
+              to hint numeric keyboards on mobile devices.  Without this the field allowed arbitrary text which led to
+              invalid data being sent to the backend.
+            */}
             <input
+              type="text"
+              inputMode="numeric"
+              pattern="\d*"
+              maxLength={4}
               value={academicYear}
-              onChange={(e) => setAcademicYear(e.target.value)}
+              onChange={(e) => {
+                const numeric = e.target.value.replace(/\D/g, "").slice(0, 4);
+                setAcademicYear(numeric);
+              }}
               placeholder="เช่น 2567"
               required
               className="w-full border px-4 py-3 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50"

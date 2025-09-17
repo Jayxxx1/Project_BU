@@ -6,6 +6,11 @@ export const createTeacher = async (req, res) => {
   const { username, email, password } = req.body;
   if (!username || !email || !password) return res.status(400).json({ message: 'username, email, password required' });
 
+  // Enforce minimum password length for teacher accounts.
+  if (typeof password !== 'string' || password.length < 6) {
+    return res.status(400).json({ message: 'password ต้องมีความยาวอย่างน้อย 6 ตัวอักษร' });
+  }
+
   const exists = await User.findOne({ email });
   if (exists) return res.status(409).json({ message: 'Email already in use' });
 
@@ -18,10 +23,14 @@ export const createTeacher = async (req, res) => {
 export const listTeachersAdmin = async (req, res) => {
   const { q } = req.query;
   const filter = { role: 'teacher' };
-  if (q) filter.$or = [
-    { username: { $regex: q, $options: 'i' } },
-    { email:    { $regex: q, $options: 'i' } },
-  ];
+  if (q) {
+    // Escape regex special characters to treat the search string literally
+    const escaped = q.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    filter.$or = [
+      { username: { $regex: escaped, $options: 'i' } },
+      { email:    { $regex: escaped, $options: 'i' } },
+    ];
+  }
   const items = await User.find(filter).select('_id username email role').sort({ username: 1 });
   res.json(items);
 };
@@ -42,7 +51,11 @@ export const listAllUsers = async (req, res) => {
   const filter = {};
   if (role && ['student','teacher','admin'].includes(role)) filter.role = role;
   if (q && q.trim()) {
-    const kw = new RegExp(q.trim(), 'i');
+    // Escape regex special characters to treat the query as a literal string rather than a pattern.  This
+    // prevents users from injecting regex expressions which could cause performance issues or match
+    // unintended patterns.
+    const escaped = q.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const kw = new RegExp(escaped, 'i');
     filter.$or = [{ username: kw }, { email: kw }, { fullName: kw }];
   }
   const items = await User.find(filter)
@@ -57,11 +70,21 @@ export const createUserAdmin = async (req, res) => {
   if (!username || !email || !password || !role) {
     return res.status(400).json({ message: 'username, email, password, role required' });
   }
+
+  // Enforce a minimum password length.  Weak or short passwords can compromise security.
+  if (typeof password !== 'string' || password.length < 6) {
+    return res.status(400).json({ message: 'password ต้องมีความยาวอย่างน้อย 6 ตัวอักษร' });
+  }
   if (!['student','teacher','admin'].includes(role)) {
     return res.status(400).json({ message: 'Invalid role' });
   }
   if (role === 'student' && !studentId) {
     return res.status(400).json({ message: 'studentId required for role=student' });
+  }
+
+  // Ensure studentId, if provided for student role, is exactly a 10-digit numeric string.  
+  if (role === 'student' && studentId && !/^\d{10}$/.test(String(studentId).trim())) {
+    return res.status(400).json({ message: 'studentId ต้องเป็นตัวเลข 10 หลัก' });
   }
 
   const exists = await User.findOne({ $or: [{ username }, { email }] });
@@ -86,22 +109,7 @@ export const createUserAdmin = async (req, res) => {
   res.status(201).json(safe);
 };
 
-// 
-// export const updateUserStatus = async (req, res) => {
-//   const { id } = req.params;
-//   const { status } = req.body || {};
-//   if (!['active','inactive'].includes(status)) return res.status(400).json({ message: 'Invalid status' });
-
-//   const user = await User.findById(id);
-//   if (!user) return res.status(404).json({ message: 'User not found' });
-//   if (user.role === 'admin' && status === 'inactive') return res.status(400).json({ message: 'cannot deactivate admin' });
-
-//   user.status = status;
-//   await user.save();
-//   res.json({ _id: user._id, status: user.status });
-// };
-
-// ===== ใหม่: ลบผู้ใช้ (กันลบ admin) =====
+//  ลบผู้ใช้ (กันลบ admin) =====
 export const deleteUserAdmin = async (req, res) => {
   const { id } = req.params;
 

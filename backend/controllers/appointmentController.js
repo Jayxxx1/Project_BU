@@ -21,6 +21,27 @@ export const createAppointment = async (req, res, next) => {
       meetingNotes,
     } = req.body;
 
+    // Validate project presence and format.  
+    if (!project || !mongoose.Types.ObjectId.isValid(String(project))) {
+      return res.status(400).json({ message: 'กรุณาระบุโปรเจคที่ถูกต้อง' });
+    }
+
+    // Basic validations
+    if (!title || !String(title).trim()) {
+      return res.status(400).json({ message: 'กรุณาระบุหัวข้อการนัดหมาย' });
+    }
+    if (!date || !startTime || !endTime) {
+      return res.status(400).json({ message: 'ต้องระบุวันที่และเวลาเริ่ม/สิ้นสุด' });
+    }
+    // Validate meetingType and location
+    const mType = meetingType || 'online';
+    if (!['online', 'offline'].includes(mType)) {
+      return res.status(400).json({ message: 'meetingType ไม่ถูกต้อง' });
+    }
+    if (mType === 'offline' && (!location || !String(location).trim())) {
+      return res.status(400).json({ message: 'กรุณาระบุสถานที่เมื่อ meetingType เป็น offline' });
+    }
+
     // คำนวณเวลาเริ่ม/สิ้นสุด
     const startAt = toDateTime(date, startTime);
     const endAt   = toDateTime(date, endTime);
@@ -32,6 +53,11 @@ export const createAppointment = async (req, res, next) => {
     }
     if (startAt >= endAt) {
       return res.status(400).json({ message: 'เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด' });
+    }
+    // Prevent scheduling appointments in the past 
+    const now = new Date();
+    if (startAt < now) {
+      return res.status(400).json({ message: 'ไม่สามารถสร้างนัดหมายในอดีตได้' });
     }
 
     // ตรวจทับซ้อน (ตาม project เดียวกัน)
@@ -50,16 +76,28 @@ export const createAppointment = async (req, res, next) => {
       ? participants.map(p => (typeof p === 'string' ? p : p?._id)).filter(Boolean)
       : [];
 
+    // Validate status if provided.  
+    const allowedStatus = ['pending','approved','reschedule_requested','rejected','cancelled'];
+    if (status && !allowedStatus.includes(status)) {
+      return res.status(400).json({ message: 'สถานะการนัดหมายไม่ถูกต้อง' });
+    }
+
     const doc = await Appointment.create({
-      title, description, reason,
-      date, startTime, endTime,
-      startAt, endAt,
-      meetingType, location,
+      title,
+      description,
+      reason,
+      date,
+      startTime,
+      endTime,
+      startAt,
+      endAt,
+      meetingType: mType,
+      location: location ? location.toString().trim() : '',
       meetingNotes,
-      status: status || 'pending',
+      status: status && allowedStatus.includes(status) ? status : 'pending',
       participantEmails,
       participants: participantIds,
-      project: project?.trim() || '',
+      project: String(project).trim(),
       createBy: req.user.id,
     });
 
@@ -79,12 +117,12 @@ export const createAppointment = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-/** รายการนัดหมายของฉัน (เดิม) */
+/** รายการนัดหมายของฉัน */
 export const getMyAppointments = async (req, res, next) => {
   try {
     const userId = req.user.id;
 
-    // โปรเจคที่เกี่ยวข้องกับฉัน (เป็นสมาชิกหรือที่ปรึกษา)
+    // โปรเจคที่เกี่ยวข้องกับฉัน
     const myProjectIds = await Project.find({
       $or: [{ members: userId }, { advisor: userId }],
     }).distinct('_id');
@@ -113,9 +151,7 @@ export const getMyAppointments = async (req, res, next) => {
   } catch (e) { next(e); }
 };
 
-/** 
- *  คนที่ไม่มีสิทธิ์จะเปิดดูรายละเอียดเชิงลึกผ่าน /:id ก็ยังโดน 403 เหมือนเดิม
- */
+/** getAllAppointments */
 export const getAllAppointments = async (req, res, next) => {
   try {
     const items = await Appointment.find({})
@@ -137,7 +173,6 @@ export const getAllAppointments = async (req, res, next) => {
 
     res.json(result);
   } catch (e) {
-    next(e);
   }
 };
 
@@ -160,10 +195,8 @@ export const getAppointmentById = async (req, res, next) => {
 
     if (!doc) return res.status(404).json({ message: 'Not found' });
 
-
     // Allow admin to view any appointment detail without ownership constraints
     const isAdmin = req.user?.role === 'admin';
-    // เงื่อนไขสิทธิ์: ผู้สร้าง, ผู้เข้าร่วม, ที่ปรึกษา/สมาชิกโปรเจค หรือ admin
     const uid = req.user?.id?.toString();
     let canSee = isAdmin ||
       (doc.createBy?._id?.toString() === uid ||
@@ -211,6 +244,24 @@ export const updateAppointment = async (req, res, next) => {
       return res.status(400).json({ message: 'เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด' });
     }
 
+    // Prevent updating to a past start time
+    const now2 = new Date();
+    if (startAt < now2) {
+      return res.status(400).json({ message: 'ไม่สามารถตั้งเวลานัดในอดีตได้' });
+    }
+
+    // Validate meetingType and location
+    const futureMeetingType = up.meetingType || doc.meetingType;
+    if (up.meetingType && !['online', 'offline'].includes(up.meetingType)) {
+      return res.status(400).json({ message: 'meetingType ไม่ถูกต้อง' });
+    }
+    if (futureMeetingType === 'offline') {
+      const loc = up.location !== undefined ? up.location : doc.location;
+      if (!loc || !String(loc).trim()) {
+        return res.status(400).json({ message: 'กรุณาระบุสถานที่เมื่อ meetingType เป็น offline' });
+      }
+    }
+
     // ตรวจทับซ้อน project เดิม (ไม่รวมตัวเอง)
     const projectId = (up.project ?? doc.project)?.toString() || '';
     if (projectId) {
@@ -222,6 +273,13 @@ export const updateAppointment = async (req, res, next) => {
       if (conflict) return res.status(409).json({ message: 'ช่วงเวลานี้ถูกจองแล้ว' });
     }
 
+    // Validate status if provided.  
+    if (up.status !== undefined) {
+      const allowedStatus = ['pending','approved','reschedule_requested','rejected','cancelled'];
+      if (up.status && !allowedStatus.includes(up.status)) {
+        return res.status(400).json({ message: 'สถานะการนัดหมายไม่ถูกต้อง' });
+      }
+    }
     // อัปเดตฟิลด์
     doc.title        = up.title        ?? doc.title;
     doc.description  = up.description  ?? doc.description;
@@ -232,7 +290,9 @@ export const updateAppointment = async (req, res, next) => {
     doc.startAt      = startAt;
     doc.endAt        = endAt;
     doc.meetingType  = up.meetingType  ?? doc.meetingType;
-    doc.location     = up.location     ?? doc.location;
+    if (up.location !== undefined) {
+      doc.location = up.location ? up.location.toString().trim() : '';
+    }
     doc.meetingNotes = up.meetingNotes ?? doc.meetingNotes;
     doc.status       = up.status       ?? doc.status;
     doc.project      = up.project      ?? doc.project;

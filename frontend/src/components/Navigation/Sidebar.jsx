@@ -4,7 +4,7 @@ import { AiFillPlusCircle, AiFillCalendar, AiFillHome } from "react-icons/ai";
 import { MdSummarize, MdGroup,MdOutlineAdminPanelSettings } from "react-icons/md";
 import { Users as UsersIcon} from 'lucide-react';
 import { IoMdInformationCircleOutline , } from "react-icons/io";
-import {useAuth} from '../contexts/AuthContext';
+import {useAuth} from '../../contexts/AuthContext';
 
 export default function Sidebar({ isSidebarOpen, toggleSidebar }) {
   const { isAuthenticated, user, logout } = useAuth();

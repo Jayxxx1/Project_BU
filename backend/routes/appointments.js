@@ -11,19 +11,13 @@ import {
 
 import { requireRole } from "../middleware/authMiddleware.js";
 
-
-
 const router = express.Router();
 
-// ต้องล็อกอินก่อน (ไม่จำกัด role)
+// ต้องล็อกอินก่อน 
 router.use(protect);
 
-
-// Only admin can retrieve all appointments
-// router.get("/all", requireRole('admin','student','teacher'), getAllAppointments);
-
-router.get("/all", getAllAppointments);
-
+// Endpoint to list all appointments across the system.  Restrict to admin users only to prevent information leakage.
+router.get("/all", requireRole('admin'), getAllAppointments);
 
 // รายการของฉัน
 router.get("/", getMyAppointments);

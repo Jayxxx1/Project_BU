@@ -24,9 +24,15 @@ router.post('/register', async (req, res) => {
   if (userRole !== 'student') {
     return res.status(403).json({ message: 'ไม่สามารถสมัครบทบาทนี้ได้ กรุณาติดต่อผู้ดูแลระบบ' });
   }
-  // นักศึกษาต้องมี studentId
-  if (userRole === 'student' && !studentId) {
-    return res.status(400).json({ message: 'กรุณากรอกรหัสนักศึกษา' });
+  // นักศึกษาต้องมี studentId และต้องเป็นตัวเลข 10 หลัก
+  if (userRole === 'student') {
+    if (!studentId) {
+      return res.status(400).json({ message: 'กรุณากรอกรหัสนักศึกษา' });
+    }
+    const idStr = String(studentId).trim();
+    if (!/^\d{10}$/.test(idStr)) {
+      return res.status(400).json({ message: 'รหัสนักศึกษาต้องเป็นตัวเลข 10 หลัก' });
+    }
   }
   try {
     if (await User.findOne({ email })) {
@@ -71,6 +77,7 @@ router.post('/register', async (req, res) => {
     res.status(500).json({ message: 'เกิดข้อผิดพลาดบนเซิร์ฟเวอร์', error: error.message });
   }
 });
+
 
 // Login
 router.post('/login', async (req, res) => {

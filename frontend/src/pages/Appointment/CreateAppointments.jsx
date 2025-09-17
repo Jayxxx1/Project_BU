@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContext.jsx";
 import axios from "axios";
-import ConfirmAppointmentModal from "../components/ConfirmAppointmentModal.jsx";
-import FeedbackModal from "../components/FeedbackModal.jsx";
-import { projectService } from "../services/projectService.js";
+import ConfirmAppointmentModal from "../../components/ConfirmAppointmentModal.jsx";
+import FeedbackModal from "../../components/Modal/FeedbackModal.jsx";
+import { projectService } from "../../services/projectService.js";
 import { Calendar, Clock, MapPin, FileText, User, AlertCircle, CheckCircle, Users, Globe } from "lucide-react";
 
 export default function CreateAppointment() {

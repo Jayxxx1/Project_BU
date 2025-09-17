@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { projectService } from "../services/projectService.js";
+import { projectService } from "../../services/projectService.js";
 import { Users, GraduationCap, Calendar as Cal, PlusCircle, Trash2, Pencil, FileText } from "lucide-react";
 
 export default function ProjectsPage() {

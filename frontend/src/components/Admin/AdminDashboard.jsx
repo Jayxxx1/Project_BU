@@ -1,6 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { appointmentService } from "../services/appointmentService";
+import { appointmentService } from "../../services/appointmentService";
 import { Loader2, CalendarClock, CheckCircle2, Clock, XCircle, RefreshCw, ListChecks, AlertTriangle, Filter, Search } from "lucide-react";
 
 
