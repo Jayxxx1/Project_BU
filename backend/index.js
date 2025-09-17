@@ -1,9 +1,19 @@
+import path from 'path';
+import { fileURLToPath } from 'url';
+import dotenv from 'dotenv';
+
+//  สร้าง __dirname สำหรับ ES modules 
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// โหลดไฟล์ ENV: backend/server/config.env 
+dotenv.config({ path: path.join(__dirname, 'server', 'config.env') });
+
+
 import express from 'express';
 import mongoose from 'mongoose';
 import cors from 'cors';
 import morgan from 'morgan';
-import dotenv from 'dotenv';
-dotenv.config();
 
 import authRoutes from './routes/auth.js';
 import appointmentsRoutes from './routes/appointments.js';
@@ -23,6 +33,11 @@ app.use(cors({
 app.use(express.json());
 app.use(morgan('dev'));
 
+// debug
+// console.log('[ENV CHECK] MAIL_HOST=', process.env.MAIL_HOST);
+// console.log('[ENV CHECK] MAIL_USER=', process.env.MAIL_USER);
+// console.log('[ENV CHECK] MAIL_PORT=', process.env.MAIL_PORT, ' FROM=', process.env.MAIL_FROM, ' PASS?', !!process.env.MAIL_PASS);
+
 // DB connect
 const MONGO_URI = process.env.ATLAS_URI || process.env.MONGO_URI;
 if (!MONGO_URI) {
@@ -40,7 +55,6 @@ mongoose.connect(MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/appointments', appointmentsRoutes);
 app.use('/api/admin', adminRoutes);
-// แทนที่กลุ่มด้วย projects แล้ว ดังนั้นเราไม่ได้ใช้ /api/groups อีกต่อไป
 app.use('/api/teachers', teacherRoutes);
 app.use('/api/projects', projectRoutes);
 

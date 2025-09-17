@@ -40,15 +40,13 @@ export const adminService = {
 
   // ===== Users: UPDATE (status toggle) =====
   // PATCH /api/admin/users/:id/status  { status: 'active'|'inactive' }
-  // *ต้องมี route นี้ที่ฝั่ง backend*
-  async updateUserStatus(userId, status) {
-    const r = await client.patch(`/api/admin/users/${userId}/status`, { status });
-    return r.data; // { _id, status }
-  },
+  // async updateUserStatus(userId, status) {
+  //   const r = await client.patch(`/api/admin/users/${userId}/status`, { status });
+  //   return r.data; // { _id, status }
+  // },
 
   // ===== Users: UPDATE (role) =====
   // PATCH /api/admin/users/:id/role  { role }
-  // (เมธอดเดิมของคุณ)
   async setRole(userId, role) {
     const r = await client.patch(`/api/admin/users/${userId}/role`, { role });
     return r.data; // {_id, username, email, role}

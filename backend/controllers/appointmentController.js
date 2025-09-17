@@ -1,8 +1,10 @@
 import Appointment from '../models/Appointment.js';
 import Project from '../models/Project.js';
 import mongoose from 'mongoose';
+import { sendEmail } from '../utils/mailer.js';
+import { renderAppointmentCreatedEmail, buildIcs } from '../utils/emailTemplates.js';
 
-/** แปลง date + time เป็น Date (โซนไทย +07:00) */
+/** แปลง date + time เป็น Date (+07:00) */
 function toDateTime(dateStr, timeStr) {
   return new Date(`${dateStr}T${timeStr}:00+07:00`);
 }
@@ -21,19 +23,18 @@ export const createAppointment = async (req, res, next) => {
       meetingNotes,
     } = req.body;
 
-    // Validate project presence and format.  
+    // Validate project
     if (!project || !mongoose.Types.ObjectId.isValid(String(project))) {
       return res.status(400).json({ message: 'กรุณาระบุโปรเจคที่ถูกต้อง' });
     }
-
-    // Basic validations
     if (!title || !String(title).trim()) {
       return res.status(400).json({ message: 'กรุณาระบุหัวข้อการนัดหมาย' });
     }
     if (!date || !startTime || !endTime) {
       return res.status(400).json({ message: 'ต้องระบุวันที่และเวลาเริ่ม/สิ้นสุด' });
     }
-    // Validate meetingType and location
+
+    // meeting type + location
     const mType = meetingType || 'online';
     if (!['online', 'offline'].includes(mType)) {
       return res.status(400).json({ message: 'meetingType ไม่ถูกต้อง' });
@@ -42,45 +43,30 @@ export const createAppointment = async (req, res, next) => {
       return res.status(400).json({ message: 'กรุณาระบุสถานที่เมื่อ meetingType เป็น offline' });
     }
 
-    // คำนวณเวลาเริ่ม/สิ้นสุด
+    // เวลา
     const startAt = toDateTime(date, startTime);
     const endAt   = toDateTime(date, endTime);
-    if (!(startAt instanceof Date) || isNaN(startAt)) {
-      return res.status(400).json({ message: 'รูปแบบเวลาเริ่มไม่ถูกต้อง' });
+    if (isNaN(startAt) || isNaN(endAt) || startAt >= endAt) {
+      return res.status(400).json({ message: 'เวลาเริ่ม/สิ้นสุดไม่ถูกต้อง' });
     }
-    if (!(endAt instanceof Date) || isNaN(endAt)) {
-      return res.status(400).json({ message: 'รูปแบบเวลาสิ้นสุดไม่ถูกต้อง' });
-    }
-    if (startAt >= endAt) {
-      return res.status(400).json({ message: 'เวลาเริ่มต้องน้อยกว่าเวลาสิ้นสุด' });
-    }
-    // Prevent scheduling appointments in the past 
-    const now = new Date();
-    if (startAt < now) {
+    if (startAt < new Date()) {
       return res.status(400).json({ message: 'ไม่สามารถสร้างนัดหมายในอดีตได้' });
     }
 
-    // ตรวจทับซ้อน (ตาม project เดียวกัน)
-    if (project) {
-      const overlap = await Appointment.findOne({
-        project,
-        $or: [
-          { startAt: { $lt: endAt }, endAt: { $gt: startAt } },
-        ],
-      }).lean();
-      if (overlap) return res.status(409).json({ message: 'ช่วงเวลานี้ถูกจองแล้ว' });
-    }
+    // ทับซ้อนภายในโปรเจกต์
+    const overlap = await Appointment.findOne({
+      project,
+      $or: [{ startAt: { $lt: endAt }, endAt: { $gt: startAt } }],
+    }).lean();
+    if (overlap) return res.status(409).json({ message: 'ช่วงเวลานี้ถูกจองแล้ว' });
 
-    // map participants (_id)
+    // สร้าง
     const participantIds = Array.isArray(participants)
       ? participants.map(p => (typeof p === 'string' ? p : p?._id)).filter(Boolean)
       : [];
 
-    // Validate status if provided.  
     const allowedStatus = ['pending','approved','reschedule_requested','rejected','cancelled'];
-    if (status && !allowedStatus.includes(status)) {
-      return res.status(400).json({ message: 'สถานะการนัดหมายไม่ถูกต้อง' });
-    }
+    const setStatus = status && allowedStatus.includes(status) ? status : 'pending';
 
     const doc = await Appointment.create({
       title,
@@ -94,13 +80,14 @@ export const createAppointment = async (req, res, next) => {
       meetingType: mType,
       location: location ? location.toString().trim() : '',
       meetingNotes,
-      status: status && allowedStatus.includes(status) ? status : 'pending',
+      status: setStatus,
       participantEmails,
       participants: participantIds,
       project: String(project).trim(),
       createBy: req.user.id,
     });
 
+    // ดึงข้อมูลครบเพื่อนำไปส่งอีเมล
     const populated = await Appointment.findById(doc._id)
       .populate('participants', '_id username email role fullName studentId')
       .populate('createBy', '_id username email role fullName studentId')
@@ -113,16 +100,68 @@ export const createAppointment = async (req, res, next) => {
         ],
       });
 
+    // ====== ส่งอีเมลแจ้งเตือนไปยังอาจารย์ที่ปรึกษา ======
+try {
+  const advisorEmail = populated?.project?.advisor?.email || '6710210419@psu.ac.th';
+
+  // สร้าง URL ไปยังหน้ารายละเอียดนัด 
+  const FE = (process.env.FRONTEND_BASE_URL || 'http://localhost:5173').replace(/\/+$/, '');
+  const detailUrl = `${FE}/appointments/${populated._id}`;
+
+  // เตรียมข้อมูลสำหรับเทมเพลต
+  const html = renderAppointmentCreatedEmail({
+    projectName: populated?.project?.name || '-',
+    title: populated?.title || '',
+    date: populated?.date,
+    startTime: populated?.startTime,
+    endTime: populated?.endTime,
+    meetingType: populated?.meetingType,
+    location: populated?.location,
+    description: populated?.description || '',
+    detailUrl,
+  });
+
+  // ให้ผู้รับกดเพิ่มเข้า Calendar ได้
+  const icsContent = buildIcs({
+    uid: `${populated._id}@projectbu`,
+    title: populated.title,
+    description: populated.description || '',
+    // แปลงเป็น UTC ตาม 
+    startUtc: populated.startAt,
+    endUtc: populated.endAt,
+    location: populated.meetingType === 'offline' ? (populated.location || '') : '',
+    url: detailUrl,
+  });
+
+  await sendEmail({
+    to: advisorEmail,
+    subject: `การนัดหมายใหม่: ${populated.title}`,
+    text:
+      `มีนัดหมายใหม่ในโปรเจกต์ ${populated?.project?.name || '-'}\n` +
+      `วันที่: ${populated.date} ${populated.startTime}-${populated.endTime}\n` +
+      `รายละเอียด: ${detailUrl}`,
+    html,
+    attachments: [
+      {
+        filename: `${(populated.title || 'appointment').replace(/[^\w.-]+/g,'_')}.ics`,
+        content: icsContent,
+        contentType: 'text/calendar; charset=UTF-8; method=PUBLISH',
+      }
+    ],
+  });
+} catch (mailErr) {
+  console.error('Send email failed:', mailErr?.message || mailErr);
+}
     res.status(201).json(populated);
-  } catch (e) { next(e); }
+  } catch (e) {
+    next(e);
+  }
 };
 
-/** รายการนัดหมายของฉัน */
+/** รายการของฉัน */
 export const getMyAppointments = async (req, res, next) => {
   try {
     const userId = req.user.id;
-
-    // โปรเจคที่เกี่ยวข้องกับฉัน
     const myProjectIds = await Project.find({
       $or: [{ members: userId }, { advisor: userId }],
     }).distinct('_id');
@@ -150,6 +189,7 @@ export const getMyAppointments = async (req, res, next) => {
     res.json(items);
   } catch (e) { next(e); }
 };
+
 
 /** getAllAppointments */
 export const getAllAppointments = async (req, res, next) => {
